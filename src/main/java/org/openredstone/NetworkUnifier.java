@@ -35,28 +35,32 @@ public class NetworkUnifier extends Plugin implements Listener {
     List<String> greetings;
     List<String> farewells;
 
+    DiscordApi discordIrcBot;
+
     Configuration ircDiscordBotConf;
     Configuration ircNetworkBotConf;
     PircBotX ircDiscordBot;
     PircBotX ircNetworkBot;
     Random rand = new Random();
 
-    @EventHandler
-    public void onPostLogin(PostLoginEvent event) {
-        sendJoinToDiscord(event.getPlayer().getDisplayName());
-        sendJoinToIrc(event.getPlayer().getDisplayName());
-    }
+    //@EventHandler
+    //public void onPostLogin(PostLoginEvent event) {
+    //    sendJoinToDiscord(event.getPlayer().getDisplayName());
+    //    sendJoinToIrc(event.getPlayer().getDisplayName());
+    //}
 
-    @EventHandler
-    public void onQuitEvent(PlayerDisconnectEvent event) {
-        sendQuitToDiscord(event.getPlayer().getDisplayName());
-        sendQuitToIrc(event.getPlayer().getDisplayName());
-    }
+    //@EventHandler
+    //public void onQuitEvent(PlayerDisconnectEvent event) {
+    //   sendQuitToDiscord(event.getPlayer().getDisplayName());
+    //    sendQuitToIrc(event.getPlayer().getDisplayName());
+    //}
 
     @Override
     public void onEnable() {
 
         loadConfig();
+
+        discordIrcBot = new DiscordApiBuilder().setToken(config.getString("discord_irc_bot_token")).login().join();
 
         ircNetworkBotConf = new Configuration.Builder()
                 .setName(config.getString("irc_network_bot_name")) //Set the nick of the bot. CHANGE IN YOUR CODE
@@ -70,7 +74,7 @@ public class NetworkUnifier extends Plugin implements Listener {
                 .setName(config.getString("irc_discord_bot_name")) //Set the nick of the bot. CHANGE IN YOUR CODE
                 .addServer(config.getString("irc_host")) //Join the freenode network
                 .addAutoJoinChannel(config.getString("irc_channel")) //Join the official #pircbotx channel
-                .addListener(new IrcToDiscordListener(config)) //Add our listener that will be called on Events
+                .addListener(new IrcToDiscordListener(config, discordIrcBot)) //Add our listener that will be called on Events
                 .setAutoReconnect(true)
                 .buildConfiguration();
         ircDiscordBot = new PircBotX(ircDiscordBotConf);
@@ -168,18 +172,15 @@ public class NetworkUnifier extends Plugin implements Listener {
     }
 
     private void discordThread() {
-        Thread discordThread = new Thread(() -> {
-            new DiscordApiBuilder().setToken(config.getString("discord_irc_bot_token")).login().thenAccept(api -> {
-                api.addMessageCreateListener(event -> {
-                    if(event.getChannel().getIdAsString().equals(config.getString("discord_channel_id"))) {
-                        if (!event.getMessageContent().isEmpty() && !ignoredDiscordIds.contains(event.getMessageAuthor().getIdAsString())) {
-                            ircDiscordBot.send().message(config.getString("irc_channel"), "\u000307" + event.getMessageAuthor().getDisplayName() + "\u000f: " + event.getMessageContent());
-                        }
+        new DiscordApiBuilder().setToken(config.getString("discord_irc_bot_token")).login().thenAccept(api -> {
+            api.addMessageCreateListener(event -> {
+                if(event.getChannel().getIdAsString().equals(config.getString("discord_channel_id"))) {
+                    if (!event.getMessageContent().isEmpty() && !ignoredDiscordIds.contains(event.getMessageAuthor().getIdAsString())) {
+                        ircDiscordBot.send().message(config.getString("irc_channel"), "\u000307" + event.getMessageAuthor().getDisplayName() + "\u000f: " + event.getMessageContent());
                     }
-                });
+                }
             });
         });
-        discordThread.start();
     }
 
     private void sendJoinToIrc(String name) {

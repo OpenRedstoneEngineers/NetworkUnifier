@@ -11,14 +11,15 @@ import org.pircbotx.hooks.events.MessageEvent;
 public class IrcToDiscordListener extends ListenerAdapter {
 
     private Configuration config;
+    DiscordApi api;
 
-    public IrcToDiscordListener(Configuration config) {
+    public IrcToDiscordListener(Configuration config, DiscordApi api) {
         this.config = config;
+        this.api = api;
     }
 
     @Override
     public void onMessage(MessageEvent event) throws Exception {
-        DiscordApi api = new DiscordApiBuilder().setToken(config.getString("discord_irc_bot_token")).login().join();
         Channel channel = api.getServerTextChannelById(config.getString("discord_channel_id")).get();
         if (config.getStringList("irc_ignore_names").contains(event.getUser().getNick())) return;
         ((ServerTextChannel) channel).sendMessage("**" + event.getUser().getNick() + "**: " + event.getMessage());
