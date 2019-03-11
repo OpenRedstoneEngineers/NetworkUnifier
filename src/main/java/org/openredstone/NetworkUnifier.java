@@ -36,6 +36,8 @@ public class NetworkUnifier extends Plugin implements Listener {
     List<String> farewells;
 
     DiscordApi discordIrcBot;
+    DiscordApi discordNetworkBot;
+    Channel gameChannel;
 
     Configuration ircDiscordBotConf;
     Configuration ircNetworkBotConf;
@@ -43,24 +45,15 @@ public class NetworkUnifier extends Plugin implements Listener {
     PircBotX ircNetworkBot;
     Random rand = new Random();
 
-    //@EventHandler
-    //public void onPostLogin(PostLoginEvent event) {
-    //    sendJoinToDiscord(event.getPlayer().getDisplayName());
-    //    sendJoinToIrc(event.getPlayer().getDisplayName());
-    //}
-
-    //@EventHandler
-    //public void onQuitEvent(PlayerDisconnectEvent event) {
-    //   sendQuitToDiscord(event.getPlayer().getDisplayName());
-    //    sendQuitToIrc(event.getPlayer().getDisplayName());
-    //}
-
     @Override
     public void onEnable() {
 
         loadConfig();
 
         discordIrcBot = new DiscordApiBuilder().setToken(config.getString("discord_irc_bot_token")).login().join();
+        discordNetworkBot = new DiscordApiBuilder().setToken(config.getString("discord_network_bot_token")).login().join();
+
+        gameChannel = discordNetworkBot.getServerTextChannelById(config.getString("discord_channel_id")).get();
 
         ircNetworkBotConf = new Configuration.Builder()
                 .setName(config.getString("irc_network_bot_name")) //Set the nick of the bot. CHANGE IN YOUR CODE
@@ -83,6 +76,24 @@ public class NetworkUnifier extends Plugin implements Listener {
         discordThread();
         getProxy().getPluginManager().registerListener(this, this);
         getLogger().info("Loaded Join/Disconnect linker");
+    }
+
+    @EventHandler
+    public void onPostLogin(PostLoginEvent event) {
+        Thread postLoginThread = new Thread(() -> {
+            sendJoinToDiscord(event.getPlayer().getDisplayName());
+            sendJoinToIrc(event.getPlayer().getDisplayName());
+        });
+        postLoginThread.start();
+    }
+
+    @EventHandler
+    public void onQuitEvent(PlayerDisconnectEvent event) {
+        Thread postQuitThread = new Thread(() -> {
+            sendQuitToDiscord(event.getPlayer().getDisplayName());
+            sendQuitToIrc(event.getPlayer().getDisplayName());
+        });
+        postQuitThread.start();
     }
 
     private void loadConfig() {
@@ -192,15 +203,11 @@ public class NetworkUnifier extends Plugin implements Listener {
     }
 
     private void sendJoinToDiscord(String name) {
-        DiscordApi api = new DiscordApiBuilder().setToken(config.getString("discord_network_bot_token")).login().join();
-        Channel channel = api.getServerTextChannelById(config.getString("discord_channel_id")).get();
-        ((ServerTextChannel) channel).sendMessage("**" + name + "** joined the network! " + getRandomWelcome());
+        ((ServerTextChannel) gameChannel).sendMessage("**" + name + "** joined the network! " + getRandomWelcome());
     }
 
     private void sendQuitToDiscord(String name) {
-        DiscordApi api = new DiscordApiBuilder().setToken(config.getString("discord_network_bot_token")).login().join();
-        Channel channel = api.getServerTextChannelById(config.getString("discord_channel_id")).get();
-        ((ServerTextChannel) channel).sendMessage("**" + name + "** left the network! " + getRandomFarewell());
+        ((ServerTextChannel) gameChannel).sendMessage("**" + name + "** left the network! " + getRandomFarewell());
     }
 
     public String getRandomFarewell() {

@@ -12,15 +12,15 @@ public class IrcToDiscordListener extends ListenerAdapter {
 
     private Configuration config;
     DiscordApi api;
+    Channel channel;
 
     public IrcToDiscordListener(Configuration config, DiscordApi api) {
         this.config = config;
-        this.api = api;
+        this.channel = api.getServerTextChannelById(config.getString("discord_channel_id")).get();
     }
 
     @Override
     public void onMessage(MessageEvent event) throws Exception {
-        Channel channel = api.getServerTextChannelById(config.getString("discord_channel_id")).get();
         if (config.getStringList("irc_ignore_names").contains(event.getUser().getNick())) return;
         ((ServerTextChannel) channel).sendMessage("**" + event.getUser().getNick() + "**: " + event.getMessage());
     }
