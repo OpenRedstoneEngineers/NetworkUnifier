@@ -14,6 +14,7 @@ import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.channel.ServerTextChannel;
+import org.javacord.api.entity.user.UserStatus;
 import org.pircbotx.Configuration;
 import org.pircbotx.PircBotX;
 import org.pircbotx.exception.IrcException;
@@ -52,7 +53,8 @@ public class NetworkUnifier extends Plugin implements Listener {
 
         discordIrcBot = new DiscordApiBuilder().setToken(config.getString("discord_irc_bot_token")).login().join();
         discordNetworkBot = new DiscordApiBuilder().setToken(config.getString("discord_network_bot_token")).login().join();
-
+        discordIrcBot.updateStatus(UserStatus.fromString(config.getString("discord_irc_bot_playing_message")));
+        discordNetworkBot.updateStatus(UserStatus.fromString(config.getString("discord_network_bot_playing_message")));
         gameChannel = discordNetworkBot.getServerTextChannelById(config.getString("discord_channel_id")).get();
 
         ircNetworkBotConf = new Configuration.Builder()
@@ -76,6 +78,7 @@ public class NetworkUnifier extends Plugin implements Listener {
         discordThread();
         getProxy().getPluginManager().registerListener(this, this);
         getLogger().info("Loaded Join/Disconnect linker");
+        
     }
 
     @EventHandler
