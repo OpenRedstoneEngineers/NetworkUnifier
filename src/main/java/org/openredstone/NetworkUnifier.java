@@ -78,7 +78,7 @@ public class NetworkUnifier extends Plugin implements Listener {
         discordThread();
         getProxy().getPluginManager().registerListener(this, this);
         getLogger().info("Loaded Join/Disconnect linker");
-        
+
     }
 
     @EventHandler

@@ -8,7 +8,11 @@ discord_irc_bot_token: "REDACTED"
 discord_irc_bot_playing_message: "on the ORE Network"
 discord_network_bot_token: "REDACTED"
 discord_network_bot_playing_message: "on the ORE Network"
-irc_ignore_names:
+irc_to_discord_ignore_names:
+  - "OREBot"
+  - "OREDiscord"
+  - "ORENetwork"
+irc_to_game_ignore_names:
   - "OREDiscord"
   - "ORENetwork"
 discord_ignore_ids:

@@ -21,7 +21,7 @@ public class IrcToDiscordListener extends ListenerAdapter {
 
     @Override
     public void onMessage(MessageEvent event) throws Exception {
-        if (config.getStringList("irc_ignore_names").contains(event.getUser().getNick())) return;
+        if (config.getStringList("irc_to_discord_ignore_names").contains(event.getUser().getNick())) return;
         ((ServerTextChannel) channel).sendMessage("**" + event.getUser().getNick() + "**: " + event.getMessage());
     }
 }

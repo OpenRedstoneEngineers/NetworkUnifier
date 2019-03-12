@@ -22,7 +22,7 @@ public class IrcToGameListener extends ListenerAdapter {
 
     @Override
     public void onMessage(MessageEvent event) throws Exception {
-        if (config.getStringList("irc_ignore_names").contains(event.getUser().getNick())) return;
+        if (config.getStringList("irc_to_game_ignore_names").contains(event.getUser().getNick())) return;
         ps.getScheduler().runAsync(p, new Runnable() {
             @Override
             public void run() {
