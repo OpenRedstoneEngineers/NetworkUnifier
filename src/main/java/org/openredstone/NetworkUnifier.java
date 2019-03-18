@@ -64,18 +64,18 @@ public class NetworkUnifier extends Plugin implements Listener {
         gameChannel = discordNetworkBot.getServerTextChannelById(config.getString("discord_channel_id")).get();
 
         ircNetworkBotConf = new Configuration.Builder()
-                .setName(config.getString("irc_network_bot_name")) //Set the nick of the bot. CHANGE IN YOUR CODE
-                .addServer(config.getString("irc_host")) //Join the freenode network
-                .addAutoJoinChannel(config.getString("irc_channel")) //Join the official #pircbotx channel
-                .addListener(new IrcToGameListener(this.getProxy(), this, config)) //Add our listener that will be called on Events
+                .setName(config.getString("irc_network_bot_name"))
+                .addServer(config.getString("irc_host"))
+                .addAutoJoinChannel(config.getString("irc_channel"))
+                .addListener(new IrcToGameListener(this.getProxy(), this, config))
                 .setAutoReconnect(true)
                 .buildConfiguration();
         ircNetworkBot = new PircBotX(ircNetworkBotConf);
         ircDiscordBotConf = new Configuration.Builder()
-                .setName(config.getString("irc_discord_bot_name")) //Set the nick of the bot. CHANGE IN YOUR CODE
-                .addServer(config.getString("irc_host")) //Join the freenode network
-                .addAutoJoinChannel(config.getString("irc_channel")) //Join the official #pircbotx channel
-                .addListener(new IrcToDiscordListener(config, discordIrcBot)) //Add our listener that will be called on Events
+                .setName(config.getString("irc_discord_bot_name"))
+                .addServer(config.getString("irc_host"))
+                .addAutoJoinChannel(config.getString("irc_channel"))
+                .addListener(new IrcToDiscordListener(config, discordIrcBot))
                 .setAutoReconnect(true)
                 .buildConfiguration();
         ircDiscordBot = new PircBotX(ircDiscordBotConf);
@@ -118,8 +118,11 @@ public class NetworkUnifier extends Plugin implements Listener {
 
             ignoredDiscordIds = config.getStringList("discord_ignore_ids");
             ignoredIrcNames = config.getStringList("irc_ignore_names");
-            farewells = config.getStringList("message_farewells");
-            greetings = config.getStringList("message_greetings");
+
+            if (config.getBoolean("enable_special_farewells_and_greetings")) {
+                farewells = config.getStringList("message_farewells");
+                greetings = config.getStringList("message_greetings");
+            }
 
             getLogger().info("Ignoring Discord IDs: " + ignoredDiscordIds.toString());
             getLogger().info("ignoring IRC Names: " + ignoredIrcNames.toString());
@@ -220,10 +223,12 @@ public class NetworkUnifier extends Plugin implements Listener {
     }
 
     public String getRandomFarewell() {
+        if (farewells.size() == 0) return "";
         return farewells.get(rand.nextInt(farewells.size() - 1 ));
     }
 
     public String getRandomWelcome() {
+        if (greetings.size() == 0) return "";
         return greetings.get(rand.nextInt(greetings.size() - 1 ));
     }
 }

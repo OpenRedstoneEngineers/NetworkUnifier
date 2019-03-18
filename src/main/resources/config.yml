@@ -8,6 +8,7 @@ discord_irc_bot_token: "REDACTED"
 discord_irc_bot_playing_message: "on the ORE Network"
 discord_network_bot_token: "REDACTED"
 discord_network_bot_playing_message: "on the ORE Network"
+enable_special_farewells_and_greetings: false
 irc_to_discord_ignore_names:
   - "OREBot"
   - "OREDiscord"
