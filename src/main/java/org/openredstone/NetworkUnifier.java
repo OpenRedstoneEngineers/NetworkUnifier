@@ -52,6 +52,9 @@ public class NetworkUnifier extends Plugin implements Listener {
     PircBotX ircNetworkBot;
     Random rand = new Random();
 
+    boolean quirkyMessages;
+    int quirkyMessageFrequency;
+
     @Override
     public void onEnable() {
 
@@ -90,8 +93,7 @@ public class NetworkUnifier extends Plugin implements Listener {
     @EventHandler
     public void onPostLogin(PostLoginEvent event) {
         Thread postLoginThread = new Thread(() -> {
-            sendJoinToDiscord(event.getPlayer().getDisplayName());
-            sendJoinToIrc(event.getPlayer().getDisplayName());
+            sendJoins(event.getPlayer().getDisplayName());
         });
         postLoginThread.start();
     }
@@ -99,8 +101,7 @@ public class NetworkUnifier extends Plugin implements Listener {
     @EventHandler
     public void onQuitEvent(PlayerDisconnectEvent event) {
         Thread postQuitThread = new Thread(() -> {
-            sendQuitToDiscord(event.getPlayer().getDisplayName());
-            sendQuitToIrc(event.getPlayer().getDisplayName());
+            sendQuits(event.getPlayer().getDisplayName());
         });
         postQuitThread.start();
     }
@@ -122,6 +123,10 @@ public class NetworkUnifier extends Plugin implements Listener {
             if (config.getBoolean("enable_special_farewells_and_greetings")) {
                 farewells = config.getStringList("message_farewells");
                 greetings = config.getStringList("message_greetings");
+            }
+
+            if (quirkyMessages = config.getBoolean("enable_special_quirky_message")) {
+                quirkyMessageFrequency = config.getInt("quirky_message_frequency");
             }
 
             getLogger().info("Ignoring Discord IDs: " + ignoredDiscordIds.toString());
@@ -206,20 +211,34 @@ public class NetworkUnifier extends Plugin implements Listener {
         });
     }
 
-    private void sendJoinToIrc(String name) {
-        ircNetworkBot.send().message(config.getString("irc_channel"), "\u000307" + name + " joined the network! " + getRandomWelcome());
+    private void sendJoins(String name) {
+        String message;
+        if (quirkyMessages && (rand.nextInt(quirkyMessageFrequency) == 1)) {
+            message = "Running " + name + ".exe ...";
+        } else {
+            message = name + " joined the network." + getRandomWelcome();
+        }
+        sendToIrc(message);
+        sendToDiscord(message);
     }
 
-    private void sendQuitToIrc(String name) {
-        ircNetworkBot.send().message(config.getString("irc_channel"), "\u000307" + name + " left the network! " + getRandomFarewell());
+    private void sendQuits(String name) {
+        String message;
+        if (quirkyMessages && (rand.nextInt(quirkyMessageFrequency) == 1)) {
+            message = name + ".exe has stopped working.";
+        } else {
+            message = name + " left the network." + getRandomFarewell();
+        }
+        sendToIrc(message);
+        sendToDiscord(message);
     }
 
-    private void sendJoinToDiscord(String name) {
-        ((ServerTextChannel) gameChannel).sendMessage("**" + name + "** joined the network! " + getRandomWelcome());
+    private void sendToIrc(String message) {
+        ircNetworkBot.send().message(config.getString("irc_channel"), "\u000307" + message);
     }
 
-    private void sendQuitToDiscord(String name) {
-        ((ServerTextChannel) gameChannel).sendMessage("**" + name + "** left the network! " + getRandomFarewell());
+    private void sendToDiscord(String message) {
+        ((ServerTextChannel) gameChannel).sendMessage("**" + message + "**");
     }
 
     public String getRandomFarewell() {
