@@ -27,7 +27,7 @@ public class IrcToGameListener extends ListenerAdapter {
     }
 
     public static TextComponent renderTextComponent(String raw) {
-        String urlRegex = "^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
+        String urlRegex = "(^(https|http)://)?[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
         Pattern pattern = Pattern.compile(urlRegex, Pattern.CASE_INSENSITIVE);
         Matcher urlMatcher = pattern.matcher(raw);
 
@@ -55,7 +55,7 @@ public class IrcToGameListener extends ListenerAdapter {
         ps.getScheduler().runAsync(p, new Runnable() {
             @Override
             public void run() {
-                TextComponent bs = new TextComponent(renderTextComponent("§cIRC §7| §f" + event.getUser().getNick() + "§7:§r " + event.getMessage()));
+                TextComponent bs = renderTextComponent("§cIRC §7| §f" + event.getUser().getNick() + "§7:§r " + event.getMessage());
                 for (ProxiedPlayer player : ps.getPlayers()) {
                     player.sendMessage(bs);
                 }
