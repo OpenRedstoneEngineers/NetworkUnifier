@@ -53,6 +53,7 @@ public class NetworkUnifier extends Plugin implements Listener {
     Random rand = new Random();
 
     boolean quirkyMessages;
+    boolean specialFarewellGreetings;
     int quirkyMessageFrequency;
 
     @Override
@@ -119,20 +120,19 @@ public class NetworkUnifier extends Plugin implements Listener {
 
             ignoredDiscordIds = config.getStringList("discord_ignore_ids");
             ignoredIrcNames = config.getStringList("irc_ignore_names");
+            getLogger().info("Ignoring Discord IDs: " + ignoredDiscordIds.toString());
+            getLogger().info("ignoring IRC Names: " + ignoredIrcNames.toString());
 
-            if (config.getBoolean("enable_special_farewells_and_greetings")) {
+            if (specialFarewellGreetings = config.getBoolean("enable_special_farewells_and_greetings")) {
                 farewells = config.getStringList("message_farewells");
                 greetings = config.getStringList("message_greetings");
+                getLogger().info("Loaded Farewells: " + farewells.toString());
+                getLogger().info("Loaded Greetings: " + greetings.toString());
             }
 
             if (quirkyMessages = config.getBoolean("enable_special_quirky_message")) {
                 quirkyMessageFrequency = config.getInt("quirky_message_frequency");
             }
-
-            getLogger().info("Ignoring Discord IDs: " + ignoredDiscordIds.toString());
-            getLogger().info("ignoring IRC Names: " + ignoredIrcNames.toString());
-            getLogger().info("Loaded Farewells: " + farewells.toString());
-            getLogger().info("Loaded Greetings: " + greetings.toString());
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -216,7 +216,8 @@ public class NetworkUnifier extends Plugin implements Listener {
         if (quirkyMessages && (rand.nextInt(quirkyMessageFrequency) == 1)) {
             message = "Running " + name + ".exe ...";
         } else {
-            message = name + " joined the network." + getRandomWelcome();
+            if (specialFarewellGreetings) message = name + " joined the network." + getRandomWelcome();
+            else message = name + " joined the network.";
         }
         sendToIrc(message);
         sendToDiscord(message);
@@ -227,7 +228,8 @@ public class NetworkUnifier extends Plugin implements Listener {
         if (quirkyMessages && (rand.nextInt(quirkyMessageFrequency) == 1)) {
             message = name + ".exe has stopped working.";
         } else {
-            message = name + " left the network." + getRandomFarewell();
+            if (specialFarewellGreetings) message = name + " left the network." + getRandomFarewell();
+            else message = name + " left the network.";
         }
         sendToIrc(message);
         sendToDiscord(message);
@@ -242,12 +244,10 @@ public class NetworkUnifier extends Plugin implements Listener {
     }
 
     public String getRandomFarewell() {
-        if (farewells.size() == 0) return "";
         return farewells.get(rand.nextInt(farewells.size() - 1 ));
     }
 
     public String getRandomWelcome() {
-        if (greetings.size() == 0) return "";
         return greetings.get(rand.nextInt(greetings.size() - 1 ));
     }
 }
