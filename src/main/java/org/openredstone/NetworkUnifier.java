@@ -14,6 +14,7 @@ import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.channel.ServerTextChannel;
+import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.user.UserStatus;
 import org.pircbotx.Configuration;
 import org.pircbotx.PircBotX;
@@ -200,6 +201,10 @@ public class NetworkUnifier extends Plugin implements Listener {
                 if(event.getChannel().getIdAsString().equals(config.getString("discord_channel_id"))) {
                     if (!event.getMessageContent().isEmpty() && !ignoredDiscordIds.contains(event.getMessageAuthor().getIdAsString())) {
                         ircDiscordBot.send().message(config.getString("irc_channel"), "\u000307" + event.getMessageAuthor().getDisplayName() + "\u000f: " + event.getMessageContent());
+                    } else if (event.getMessageContent().isEmpty() && (event.getMessage().getEmbeds().size() > 0)){
+                        for (Embed embed : event.getMessage().getEmbeds()) {
+                            ircDiscordBot.send().message(config.getString("irc_channel"), "\u000307" + embed.getUrl().toString());
+                        }
                     }
                 }
             });
