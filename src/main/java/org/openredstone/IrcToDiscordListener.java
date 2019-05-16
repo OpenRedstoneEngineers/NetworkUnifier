@@ -2,7 +2,6 @@ package org.openredstone;
 
 import net.md_5.bungee.config.Configuration;
 import org.javacord.api.DiscordApi;
-import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.channel.ServerTextChannel;
 import org.pircbotx.hooks.ListenerAdapter;
@@ -15,7 +14,6 @@ import org.pircbotx.hooks.events.KickEvent;
 public class IrcToDiscordListener extends ListenerAdapter {
 
     private Configuration config;
-    DiscordApi api;
     Channel channel;
 
     public IrcToDiscordListener(Configuration config, DiscordApi api) {
