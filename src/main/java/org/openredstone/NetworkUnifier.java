@@ -71,6 +71,7 @@ public class NetworkUnifier extends Plugin implements Listener {
                 .setName(config.getString("irc_network_bot_name"))
                 .addServer(config.getString("irc_host"))
                 .addAutoJoinChannel(config.getString("irc_channel"))
+                .setNickservPassword(config.getString("irc_network_bot_pass"))
                 .addListener(new IrcToGameListener(this.getProxy(), this, config))
                 .setAutoReconnect(true)
                 .buildConfiguration();
@@ -79,6 +80,7 @@ public class NetworkUnifier extends Plugin implements Listener {
                 .setName(config.getString("irc_discord_bot_name"))
                 .addServer(config.getString("irc_host"))
                 .addAutoJoinChannel(config.getString("irc_channel"))
+                .setNickservPassword(config.getString("irc_discord_bot_pass"))
                 .addListener(new IrcToDiscordListener(config, discordIrcBot))
                 .setAutoReconnect(true)
                 .buildConfiguration();

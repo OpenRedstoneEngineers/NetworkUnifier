@@ -6,10 +6,11 @@ import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.channel.ServerTextChannel;
 import org.pircbotx.hooks.ListenerAdapter;
-import org.pircbotx.hooks.events.JoinEvent;
 import org.pircbotx.hooks.events.MessageEvent;
+import org.pircbotx.hooks.events.JoinEvent;
 import org.pircbotx.hooks.events.QuitEvent;
 import org.pircbotx.hooks.events.TopicEvent;
+import org.pircbotx.hooks.events.KickEvent;
 
 public class IrcToDiscordListener extends ListenerAdapter {
 
@@ -24,12 +25,12 @@ public class IrcToDiscordListener extends ListenerAdapter {
 
     @Override
     public void onMessage(MessageEvent event) throws Exception {
-        sendToDiscord(event.getUser().toString(), "**%USER%**: " + event.getMessage());
+        sendToDiscord(event.getUser().getNick(), "**%USER%**: " + event.getMessage());
     }
 
     @Override
     public void onJoin(JoinEvent event) {
-        sendToDiscord(event.getUser().toString(), "**%USER%** joined IRC");
+        sendToDiscord(event.getUser().getNick(), "**%USER%** joined IRC");
     }
 
     @Override
@@ -40,6 +41,11 @@ public class IrcToDiscordListener extends ListenerAdapter {
     @Override
     public void onTopic(TopicEvent event) {
         ((ServerTextChannel) channel).updateTopic(event.getTopic());
+    }
+
+    @Override
+    public void onKick(KickEvent event) {
+        sendToDiscord(event.getUser().getNick(), "**%USER%** was kicked from IRC");
     }
 
     public void sendToDiscord(String user, String message) {
