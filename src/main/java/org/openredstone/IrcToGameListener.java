@@ -10,6 +10,7 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.MessageEvent;
+import org.pircbotx.hooks.events.PrivateMessageEvent;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,5 +62,19 @@ public class IrcToGameListener extends ListenerAdapter {
                 }
             }
         });
+    }
+
+    @Override
+    public void onPrivateMessage(PrivateMessageEvent event) throws Exception {
+        String user = event.getMessage().substring(0,event.getMessage().indexOf(" "));
+        String message = event.getMessage().substring(event.getMessage().indexOf(" "));
+        for (ProxiedPlayer player : ps.getPlayers()) {
+            if (player.getDisplayName().equals(user)) {
+                player.sendMessage(new TextComponent(message));
+                event.respondPrivateMessage("Sent to " + user + ": " + event.getMessage());
+                return;
+            }
+        }
+        event.respondPrivateMessage("User \"" + user + "\" not found.");
     }
 }
