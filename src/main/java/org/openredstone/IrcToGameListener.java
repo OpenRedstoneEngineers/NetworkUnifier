@@ -8,9 +8,9 @@ import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
+import org.javacord.api.entity.channel.ServerTextChannel;
 import org.pircbotx.hooks.ListenerAdapter;
-import org.pircbotx.hooks.events.MessageEvent;
-import org.pircbotx.hooks.events.PrivateMessageEvent;
+import org.pircbotx.hooks.events.*;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,7 +28,7 @@ public class IrcToGameListener extends ListenerAdapter {
     }
 
     public static TextComponent renderTextComponent(String raw) {
-        String urlRegex = "(^(https|http)://)?[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
+        String urlRegex = "(http|https)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
         Pattern pattern = Pattern.compile(urlRegex, Pattern.CASE_INSENSITIVE);
         Matcher urlMatcher = pattern.matcher(raw);
 
@@ -52,16 +52,26 @@ public class IrcToGameListener extends ListenerAdapter {
 
     @Override
     public void onMessage(MessageEvent event) throws Exception {
-        if (config.getStringList("irc_to_game_ignore_names").contains(event.getUser().getNick())) return;
-        ps.getScheduler().runAsync(p, new Runnable() {
-            @Override
-            public void run() {
-                TextComponent bs = renderTextComponent("§cIRC §7| §f" + event.getUser().getNick() + "§7:§r " + event.getMessage());
-                for (ProxiedPlayer player : ps.getPlayers()) {
-                    player.sendMessage(bs);
-                }
-            }
-        });
+        sendToGame(event.getUser().getNick(), "§cIRC §7| §f%USER%§7:§r " + event.getMessage());
+    }
+    @Override
+    public void onJoin(JoinEvent event) {
+        sendToGame(event.getUser().getNick(), "§cIRC §7| %USER% joined IRC");
+    }
+
+    @Override
+    public void onQuit(QuitEvent event) {
+        sendToGame(event.getUser().getNick(),"§cIRC §7| %USER% left IRC");
+    }
+
+    @Override
+    public void onTopic(TopicEvent event) {
+        sendToGame(event.getUser().getNick(), "§cIRC §7| %USER% set the topic to: " + event.getTopic());
+    }
+
+    @Override
+    public void onKick(KickEvent event) {
+        sendToGame(event.getUser().getNick(), "§cIRC §7| %USER% was kicked from IRC");
     }
 
     @Override
@@ -76,5 +86,19 @@ public class IrcToGameListener extends ListenerAdapter {
             }
         }
         event.respondPrivateMessage("User \"" + user + "\" not found.");
+    }
+
+    private void sendToGame(String user, String message) {
+        if (config.getStringList("irc_to_game_ignore_names").contains(user)) return;
+        String messageToSend = message.replaceAll("%USER%", user);
+        ps.getScheduler().runAsync(p, new Runnable() {
+            @Override
+            public void run() {
+                TextComponent bs = renderTextComponent(messageToSend);
+                for (ProxiedPlayer player : ps.getPlayers()) {
+                    player.sendMessage(bs);
+                }
+            }
+        });
     }
 }
