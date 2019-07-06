@@ -139,7 +139,7 @@ public class NetworkUnifier extends Plugin implements Listener {
     public void onMessage(ChatEvent e) {
         ProxiedPlayer pp = (ProxiedPlayer) e.getSender();
         if ((e.getMessage().length() > 0) && (!e.getMessage().startsWith("/"))) {
-            ircNetworkBot.send().message(config.getString("irc_channel"), "\u000307" + pp.getDisplayName() + "\u000f: " + e.getMessage());
+            ircNetworkBot.send().message(config.getString("irc_channel"), "\u000307" + pp.getDisplayName() + "\u000f: " + e.getMessage().replaceAll("&([0-9]|[abcdefklmnor])", "").trim());
         }
     }
 
