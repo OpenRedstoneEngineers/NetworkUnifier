@@ -206,19 +206,26 @@ public class NetworkUnifier extends Plugin implements Listener {
             api.addMessageCreateListener(event -> {
                 if(event.getChannel().getIdAsString().equals(config.getString("discord_channel_id"))) {
                     if (!event.getMessageContent().isEmpty() && !ignoredDiscordIds.contains(event.getMessageAuthor().getIdAsString())) {
+
                         List<User> mentionedUsers = event.getMessage().getMentionedUsers();
                         List<CustomEmoji> mentionedEmojis = event.getMessage().getCustomEmojis();
                         List<Role> mentionedRoles = event.getMessage().getMentionedRoles();
+
                         String message = event.getMessageContent();
 
-                        if (!mentionedUsers.isEmpty()) {
-                            message = replaceUsers(mentionedUsers, message);
+                        for (User user : mentionedUsers) {
+                            String toReplace = "<@!" + user.getIdAsString() + ">";
+                            message.replaceAll(toReplace, "@" + user.getDisplayName(user.getMutualServers().iterator().next()));
                         }
-                        if (!mentionedEmojis.isEmpty()) {
-                            message = replaceEmojis(mentionedEmojis, message);
+
+                        for (CustomEmoji emoji : mentionedEmojis) {
+                            String toReplace = "<:" + emoji.getName() + ":" + emoji.getIdAsString() + ">";
+                            message.replaceAll(toReplace, ":"+ emoji.getName() + ":");
                         }
-                        if (!mentionedRoles.isEmpty()) {
-                            message = replaceRoles(mentionedRoles, message);
+
+                        for (Role role : mentionedRoles) {
+                            String toReplace = "<@&" + role.getIdAsString() + ">";
+                            message.replaceAll(toReplace, "@" + role.getName());
                         }
 
                         ircDiscordBot.send().message(config.getString("irc_channel"), "\u000307" + event.getMessageAuthor().getDisplayName() + "\u000f: " + message);
@@ -231,30 +238,6 @@ public class NetworkUnifier extends Plugin implements Listener {
                 }
             });
         });
-    }
-
-    private String replaceUsers(List<User> users, String message) {
-        for (User user : users) {
-            String toReplace = "<@!" + user.getIdAsString() + ">";
-            message.replaceAll(toReplace, "@" + user.getDisplayName(user.getMutualServers().iterator().next()));
-        }
-        return message;
-    }
-
-    private String replaceEmojis(List<CustomEmoji> emojis, String message) {
-        for (CustomEmoji emoji : emojis) {
-            String toReplace = "<:" + emoji.getName() + ":" + emoji.getIdAsString() + ">";
-            message.replaceAll(toReplace, ":"+ emoji.getName() + ":");
-        }
-        return message;
-    }
-
-    private String replaceRoles(List<Role> roles, String message) {
-        for (Role role : roles) {
-            String toReplace = "<@&" + role.getIdAsString() + ">";
-            message.replaceAll(toReplace, "@" + role.getName());
-        }
-        return message;
     }
 
     private void sendJoins(String name) {
