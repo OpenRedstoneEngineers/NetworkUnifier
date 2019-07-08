@@ -85,8 +85,8 @@ public class NetworkUnifier extends Plugin implements Listener {
                 .setAutoReconnect(true)
                 .buildConfiguration();
         ircDiscordBot = new PircBotX(ircDiscordBotConf);
-        ircDiscordBotThread();
-        ircNetworkBotThread();
+        startBotThread(ircDiscordBot);
+        startBotThread(ircNetworkBot);
         discordThread();
         getProxy().getPluginManager().registerListener(this, this);
         getLogger().info("Loaded Join/Disconnect linker");
@@ -149,30 +149,15 @@ public class NetworkUnifier extends Plugin implements Listener {
         }
     }
 
-    private void ircNetworkBotThread() {
+    private void startBotThread(PircBotX bot) {
         // The bot would print out to the proxy without slapping it into its own thread.
         Thread botThread = new Thread(() -> {
             try {
-                ircNetworkBot.startBot();
+                bot.startBot();
             } catch (IOException | IrcException e) {
                 getLogger().info(e.toString());
                 this.getProxy().getScheduler().runAsync(this, () ->
-                    getLogger().info(e.getMessage())
-                );
-            }
-        });
-        botThread.start();
-    }
-
-    private void ircDiscordBotThread() {
-        // The bot would print out to the proxy without slapping it into its own thread.
-        Thread botThread = new Thread(() -> {
-            try {
-                ircDiscordBot.startBot();
-            } catch (IOException | IrcException e) {
-                getLogger().info(e.toString());
-                this.getProxy().getScheduler().runAsync(this, () ->
-                    getLogger().info(e.getMessage())
+                        getLogger().info(e.getMessage())
                 );
             }
         });
