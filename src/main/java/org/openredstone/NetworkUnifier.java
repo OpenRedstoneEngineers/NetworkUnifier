@@ -17,7 +17,6 @@ import org.javacord.api.entity.channel.ServerTextChannel;
 import org.javacord.api.entity.emoji.CustomEmoji;
 import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.permission.Role;
-import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.entity.user.UserStatus;
 import org.pircbotx.Configuration;
@@ -28,8 +27,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Random;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class NetworkUnifier extends Plugin implements Listener {
 
@@ -167,36 +164,38 @@ public class NetworkUnifier extends Plugin implements Listener {
     private void discordThread() {
         new DiscordApiBuilder().setToken(config.getString("discord_irc_bot_token")).login().thenAccept(api -> {
             api.addMessageCreateListener(event -> {
-                if(event.getChannel().getIdAsString().equals(config.getString("discord_channel_id"))) {
-                    if (!event.getMessageContent().isEmpty() && !ignoredDiscordIds.contains(event.getMessageAuthor().getIdAsString())) {
+                if (!event.getChannel().getIdAsString().equals(config.getString("discord_channel_id"))) {
+                    return;
+                }
 
-                        List<User> mentionedUsers = event.getMessage().getMentionedUsers();
-                        List<CustomEmoji> mentionedEmojis = event.getMessage().getCustomEmojis();
-                        List<Role> mentionedRoles = event.getMessage().getMentionedRoles();
+                if (!event.getMessageContent().isEmpty() && !ignoredDiscordIds.contains(event.getMessageAuthor().getIdAsString())) {
 
-                        String message = event.getMessageContent();
+                    List<User> mentionedUsers = event.getMessage().getMentionedUsers();
+                    List<CustomEmoji> mentionedEmojis = event.getMessage().getCustomEmojis();
+                    List<Role> mentionedRoles = event.getMessage().getMentionedRoles();
 
-                        for (User user : mentionedUsers) {
-                            String toReplace = "<@!?" + user.getIdAsString() + ">";
-                            message = message.replaceAll(toReplace, "@" + user.getDisplayName(user.getMutualServers().iterator().next()));
-                        }
+                    String message = event.getMessageContent();
 
-                        for (CustomEmoji emoji : mentionedEmojis) {
-                            String toReplace = "<a?:" + emoji.getName() + ":" + emoji.getIdAsString() + ">";
-                            message = message.replaceAll(toReplace, ":"+ emoji.getName() + ":");
-                        }
+                    for (User user : mentionedUsers) {
+                        String toReplace = "<@!?" + user.getIdAsString() + ">";
+                        message = message.replaceAll(toReplace, "@" + user.getDisplayName(user.getMutualServers().iterator().next()));
+                    }
 
-                        for (Role role : mentionedRoles) {
-                            String toReplace = "<@&" + role.getIdAsString() + ">";
-                            message = message.replaceAll(toReplace, "@" + role.getName());
-                        }
+                    for (CustomEmoji emoji : mentionedEmojis) {
+                        String toReplace = "<a?:" + emoji.getName() + ":" + emoji.getIdAsString() + ">";
+                        message = message.replaceAll(toReplace, ":"+ emoji.getName() + ":");
+                    }
 
-                        ircDiscordBot.send().message(config.getString("irc_channel"), "\u000307" + event.getMessageAuthor().getDisplayName() + "\u000f: " + message);
+                    for (Role role : mentionedRoles) {
+                        String toReplace = "<@&" + role.getIdAsString() + ">";
+                        message = message.replaceAll(toReplace, "@" + role.getName());
+                    }
 
-                    } else if (event.getMessageContent().isEmpty() && (event.getMessage().getEmbeds().size() > 0)){
-                        for (Embed embed : event.getMessage().getEmbeds()) {
-                            ircDiscordBot.send().message(config.getString("irc_channel"), "\u000307" + embed.getUrl().toString());
-                        }
+                    ircDiscordBot.send().message(config.getString("irc_channel"), "\u000307" + event.getMessageAuthor().getDisplayName() + "\u000f: " + message);
+
+                } else if (event.getMessageContent().isEmpty() && (event.getMessage().getEmbeds().size() > 0)){
+                    for (Embed embed : event.getMessage().getEmbeds()) {
+                        ircDiscordBot.send().message(config.getString("irc_channel"), "\u000307" + embed.getUrl().toString());
                     }
                 }
             });
@@ -207,9 +206,10 @@ public class NetworkUnifier extends Plugin implements Listener {
         String message;
         if (quirkyMessages && (rand.nextInt(quirkyMessageFrequency) == 1)) {
             message = "Running " + name + ".exe ...";
+        } else if (specialFarewellGreetings) {
+            message = name + " joined the network." + getRandomWelcome();
         } else {
-            if (specialFarewellGreetings) message = name + " joined the network." + getRandomWelcome();
-            else message = name + " joined the network.";
+            message = name + " joined the network.";
         }
         sendToIrc(message);
         sendToDiscord(message);
@@ -219,9 +219,10 @@ public class NetworkUnifier extends Plugin implements Listener {
         String message;
         if (quirkyMessages && (rand.nextInt(quirkyMessageFrequency) == 1)) {
             message = name + ".exe has stopped working.";
+        } else if (specialFarewellGreetings) {
+            message = name + " left the network." + getRandomFarewell();
         } else {
-            if (specialFarewellGreetings) message = name + " left the network." + getRandomFarewell();
-            else message = name + " left the network.";
+            message = name + " left the network.";
         }
         sendToIrc(message);
         sendToDiscord(message);
