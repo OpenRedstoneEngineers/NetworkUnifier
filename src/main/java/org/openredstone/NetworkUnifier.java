@@ -154,22 +154,11 @@ public class NetworkUnifier extends Plugin implements Listener {
         Thread botThread = new Thread(() -> {
             try {
                 ircNetworkBot.startBot();
-            } catch (IOException e) {
+            } catch (IOException | IrcException e) {
                 getLogger().info(e.toString());
-                this.getProxy().getScheduler().runAsync(this, new Runnable() {
-                    @Override
-                    public void run() {
-                        getLogger().info(e.getMessage());
-                    }
-                });
-            } catch (IrcException e) {
-                getLogger().info(e.toString());
-                this.getProxy().getScheduler().runAsync(this, new Runnable() {
-                    @Override
-                    public void run() {
-                        getLogger().info(e.getMessage());
-                    }
-                });
+                this.getProxy().getScheduler().runAsync(this, () ->
+                    getLogger().info(e.getMessage())
+                );
             }
         });
         botThread.start();
@@ -180,22 +169,11 @@ public class NetworkUnifier extends Plugin implements Listener {
         Thread botThread = new Thread(() -> {
             try {
                 ircDiscordBot.startBot();
-            } catch (IOException e) {
+            } catch (IOException | IrcException e) {
                 getLogger().info(e.toString());
-                this.getProxy().getScheduler().runAsync(this, new Runnable() {
-                    @Override
-                    public void run() {
-                        getLogger().info(e.getMessage());
-                    }
-                });
-            } catch (IrcException e) {
-                getLogger().info(e.toString());
-                this.getProxy().getScheduler().runAsync(this, new Runnable() {
-                    @Override
-                    public void run() {
-                        getLogger().info(e.getMessage());
-                    }
-                });
+                this.getProxy().getScheduler().runAsync(this, () ->
+                    getLogger().info(e.getMessage())
+                );
             }
         });
         botThread.start();
