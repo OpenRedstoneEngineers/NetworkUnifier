@@ -214,18 +214,18 @@ public class NetworkUnifier extends Plugin implements Listener {
                         String message = event.getMessageContent();
 
                         for (User user : mentionedUsers) {
-                            String toReplace = "<@!" + user.getIdAsString() + ">";
-                            message.replaceAll(toReplace, "@" + user.getDisplayName(user.getMutualServers().iterator().next()));
+                            String toReplace = "<@!?" + user.getIdAsString() + ">";
+                            message = message.replaceAll(toReplace, "@" + user.getDisplayName(user.getMutualServers().iterator().next()));
                         }
 
                         for (CustomEmoji emoji : mentionedEmojis) {
-                            String toReplace = "<:" + emoji.getName() + ":" + emoji.getIdAsString() + ">";
-                            message.replaceAll(toReplace, ":"+ emoji.getName() + ":");
+                            String toReplace = "<a?:" + emoji.getName() + ":" + emoji.getIdAsString() + ">";
+                            message = message.replaceAll(toReplace, ":"+ emoji.getName() + ":");
                         }
 
                         for (Role role : mentionedRoles) {
                             String toReplace = "<@&" + role.getIdAsString() + ">";
-                            message.replaceAll(toReplace, "@" + role.getName());
+                            message = message.replaceAll(toReplace, "@" + role.getName());
                         }
 
                         ircDiscordBot.send().message(config.getString("irc_channel"), "\u000307" + event.getMessageAuthor().getDisplayName() + "\u000f: " + message);
