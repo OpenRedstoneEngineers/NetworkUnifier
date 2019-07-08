@@ -235,44 +235,26 @@ public class NetworkUnifier extends Plugin implements Listener {
 
     private String replaceUsers(List<User> users, String message) {
         for (User user : users) {
-            String regex = "<@!" + user.getIdAsString() + ">";
-            message = replaceRegexMatches(regex, user.getDisplayName(user.getMutualServers().iterator().next()), message);
+            String toReplace = "<@!" + user.getIdAsString() + ">";
+            message.replaceAll(toReplace, "@" + user.getDisplayName(user.getMutualServers().iterator().next()));
         }
         return message;
     }
 
     private String replaceEmojis(List<CustomEmoji> emojis, String message) {
         for (CustomEmoji emoji : emojis) {
-            String regex = "<:" + emoji.getName() + ":" + emoji.getIdAsString() + ">";
-            message = replaceRegexMatches(regex, emoji.getName(), message);
+            String toReplace = "<:" + emoji.getName() + ":" + emoji.getIdAsString() + ">";
+            message.replaceAll(toReplace, ":"+ emoji.getName() + ":");
         }
         return message;
     }
 
     private String replaceRoles(List<Role> roles, String message) {
         for (Role role : roles) {
-            String regex = "<@&" + role.getIdAsString() + ">";
-            message = replaceRegexMatches(regex, role.getName(), message);
+            String toReplace = "<@&" + role.getIdAsString() + ">";
+            message.replaceAll(toReplace, "@" + role.getName());
         }
         return message;
-    }
-
-    private String replaceRegexMatches(String regex, String replacer, String message) {
-        Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(message);
-
-        StringBuilder toReturn = new StringBuilder();
-        int lastIndex = 0;
-
-        while (matcher.find()) {
-            int startingIndex = matcher.start();
-            int endingIndex = matcher.end();
-            toReturn.append(message.substring(lastIndex, startingIndex));
-            toReturn.append(replacer);
-            lastIndex = endingIndex;
-        }
-        toReturn.append(message.substring(lastIndex));
-        return toReturn.toString();
     }
 
     private void sendJoins(String name) {
