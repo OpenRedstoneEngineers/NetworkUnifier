@@ -8,7 +8,6 @@ import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
-import org.javacord.api.entity.channel.ServerTextChannel;
 import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.*;
 
@@ -89,15 +88,15 @@ public class IrcToGameListener extends ListenerAdapter {
     }
 
     private void sendToGame(String user, String message) {
-        if (config.getStringList("irc_to_game_ignore_names").contains(user)) return;
+        if (config.getStringList("irc_to_game_ignore_names").contains(user)) {
+            return;
+        }
+
         String messageToSend = message.replaceAll("%USER%", user);
-        ps.getScheduler().runAsync(p, new Runnable() {
-            @Override
-            public void run() {
-                TextComponent bs = renderTextComponent(messageToSend);
-                for (ProxiedPlayer player : ps.getPlayers()) {
-                    player.sendMessage(bs);
-                }
+        ps.getScheduler().runAsync(p, () -> {
+            TextComponent bs = renderTextComponent(messageToSend);
+            for (ProxiedPlayer player : ps.getPlayers()) {
+                player.sendMessage(bs);
             }
         });
     }

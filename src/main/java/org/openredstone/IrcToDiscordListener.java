@@ -47,7 +47,10 @@ public class IrcToDiscordListener extends ListenerAdapter {
     }
 
     public void sendToDiscord(String user, String message) {
-        if (config.getStringList("irc_to_discord_ignore_names").contains(user)) return;
+        if (config.getStringList("irc_to_discord_ignore_names").contains(user)) {
+            return;
+        }
+
         message = message.replaceAll("%USER%", user);
         ((ServerTextChannel) channel).sendMessage(message);
     }
