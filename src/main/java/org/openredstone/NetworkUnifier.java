@@ -14,7 +14,11 @@ import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.channel.ServerTextChannel;
+import org.javacord.api.entity.emoji.CustomEmoji;
 import org.javacord.api.entity.message.embed.Embed;
+import org.javacord.api.entity.permission.Role;
+import org.javacord.api.entity.server.Server;
+import org.javacord.api.entity.user.User;
 import org.javacord.api.entity.user.UserStatus;
 import org.pircbotx.Configuration;
 import org.pircbotx.PircBotX;
@@ -24,6 +28,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class NetworkUnifier extends Plugin implements Listener {
 
@@ -200,7 +206,23 @@ public class NetworkUnifier extends Plugin implements Listener {
             api.addMessageCreateListener(event -> {
                 if(event.getChannel().getIdAsString().equals(config.getString("discord_channel_id"))) {
                     if (!event.getMessageContent().isEmpty() && !ignoredDiscordIds.contains(event.getMessageAuthor().getIdAsString())) {
-                        ircDiscordBot.send().message(config.getString("irc_channel"), "\u000307" + event.getMessageAuthor().getDisplayName() + "\u000f: " + event.getMessageContent());
+                        List<User> mentionedUsers = event.getMessage().getMentionedUsers();
+                        List<CustomEmoji> mentionedEmojis = event.getMessage().getCustomEmojis();
+                        List<Role> mentionedRoles = event.getMessage().getMentionedRoles();
+                        String message = event.getMessageContent();
+
+                        if (!mentionedUsers.isEmpty()) {
+                            message = replaceUsers(mentionedUsers, message);
+                        }
+                        if (!mentionedEmojis.isEmpty()) {
+                            message = replaceEmojis(mentionedEmojis, message);
+                        }
+                        if (!mentionedRoles.isEmpty()) {
+                            message = replaceRoles(mentionedRoles, message);
+                        }
+
+                        ircDiscordBot.send().message(config.getString("irc_channel"), "\u000307" + event.getMessageAuthor().getDisplayName() + "\u000f: " + message);
+
                     } else if (event.getMessageContent().isEmpty() && (event.getMessage().getEmbeds().size() > 0)){
                         for (Embed embed : event.getMessage().getEmbeds()) {
                             ircDiscordBot.send().message(config.getString("irc_channel"), "\u000307" + embed.getUrl().toString());
@@ -209,6 +231,48 @@ public class NetworkUnifier extends Plugin implements Listener {
                 }
             });
         });
+    }
+
+    private String replaceUsers(List<User> users, String message) {
+        for (User user : users) {
+            String regex = "<@!" + user.getIdAsString() + ">";
+            message = replaceRegexMatches(regex, user.getDisplayName(user.getMutualServers().iterator().next()), message);
+        }
+        return message;
+    }
+
+    private String replaceEmojis(List<CustomEmoji> emojis, String message) {
+        for (CustomEmoji emoji : emojis) {
+            String regex = "<:" + emoji.getName() + ":" + emoji.getIdAsString() + ">";
+            message = replaceRegexMatches(regex, emoji.getName(), message);
+        }
+        return message;
+    }
+
+    private String replaceRoles(List<Role> roles, String message) {
+        for (Role role : roles) {
+            String regex = "<@&" + role.getIdAsString() + ">";
+            message = replaceRegexMatches(regex, role.getName(), message);
+        }
+        return message;
+    }
+
+    private String replaceRegexMatches(String regex, String replacer, String message) {
+        Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(message);
+
+        StringBuilder toReturn = new StringBuilder();
+        int lastIndex = 0;
+
+        while (matcher.find()) {
+            int startingIndex = matcher.start();
+            int endingIndex = matcher.end();
+            toReturn.append(message.substring(lastIndex, startingIndex));
+            toReturn.append(replacer);
+            lastIndex = endingIndex;
+        }
+        toReturn.append(message.substring(lastIndex));
+        return toReturn.toString();
     }
 
     private void sendJoins(String name) {
