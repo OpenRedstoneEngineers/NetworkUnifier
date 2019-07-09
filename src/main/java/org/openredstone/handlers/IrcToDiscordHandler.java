@@ -1,4 +1,4 @@
-package org.openredstone;
+package org.openredstone.handlers;
 
 import net.md_5.bungee.config.Configuration;
 import org.javacord.api.DiscordApi;
@@ -11,12 +11,12 @@ import org.pircbotx.hooks.events.QuitEvent;
 import org.pircbotx.hooks.events.TopicEvent;
 import org.pircbotx.hooks.events.KickEvent;
 
-public class IrcToDiscordListener extends ListenerAdapter {
+public class IrcToDiscordHandler extends ListenerAdapter {
 
     private Configuration config;
     Channel channel;
 
-    public IrcToDiscordListener(Configuration config, DiscordApi api) {
+    public IrcToDiscordHandler(Configuration config, DiscordApi api) {
         this.config = config;
         this.channel = api.getServerTextChannelById(config.getString("discord_channel_id")).get();
     }

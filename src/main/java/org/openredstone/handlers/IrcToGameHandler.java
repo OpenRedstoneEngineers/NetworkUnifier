@@ -1,4 +1,4 @@
-package org.openredstone;
+package org.openredstone.handlers;
 
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -14,13 +14,13 @@ import org.pircbotx.hooks.events.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class IrcToGameListener extends ListenerAdapter {
+public class IrcToGameHandler extends ListenerAdapter {
 
     private Configuration config;
     private ProxyServer ps;
     private Plugin p;
 
-    public IrcToGameListener(ProxyServer ps, Plugin p, Configuration config) {
+    public IrcToGameHandler(ProxyServer ps, Plugin p, Configuration config) {
         this.config = config;
         this.ps = ps;
         this.p = p;
