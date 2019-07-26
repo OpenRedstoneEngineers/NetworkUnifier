@@ -43,7 +43,7 @@ public class IrcToDiscordHandler extends ListenerAdapter {
 
     @Override
     public void onKick(KickEvent event) {
-        sendToDiscord(event.getUser().getNick(), "**%USER%** was kicked from IRC");
+        sendToDiscord(event.getRecipient().getNick(), "**%USER%** was kicked from IRC");
     }
 
     public void sendToDiscord(String user, String message) {
