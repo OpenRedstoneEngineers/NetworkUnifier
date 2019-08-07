@@ -1,5 +1,9 @@
 package org.openredstone;
 
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
@@ -10,28 +14,56 @@ import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.user.UserStatus;
 import org.openredstone.bots.IrcBot;
+import org.openredstone.commands.NetworkUnifierCommand;
 import org.openredstone.handlers.*;
 import org.pircbotx.Configuration;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Logger;
 
 public class NetworkUnifier extends Plugin implements Listener {
 
-    private net.md_5.bungee.config.Configuration config;
+    static net.md_5.bungee.config.Configuration config;
+    static Logger logger;
+    static Plugin plugin;
+    static ProxyServer proxy;
+    static String version;
 
-    DiscordApi discordIrcBot;
-    DiscordApi discordNetworkBot;
-    Channel gameChannel;
+    static DiscordApi discordIrcBot;
+    static DiscordApi discordNetworkBot;
+    static Channel gameChannel;
 
-    IrcBot ircNetworkBot;
-    IrcBot ircDiscordBot;
+    static IrcBot ircNetworkBot;
+    static IrcBot ircDiscordBot;
+
+    static Listener joinQuitEventListener;
+    static Listener gameToIrcListener;
+
+    static DiscordToIrcHandler discordToIrcHandler;
 
     @Override
     public void onEnable() {
 
+        logger = getLogger();
+        plugin = this;
+        proxy = getProxy();
+        version = getDescription().getVersion();
+
+        proxy.getPluginManager().registerCommand(this, new NetworkUnifierCommand("networkunifier", "networkunifier", "nu"));
+
         loadConfig();
 
+        load();
+
+    }
+
+    @Override
+    public void onDisable() {
+        unload();
+    }
+
+    public static void load() {
         discordIrcBot = new DiscordApiBuilder().setToken(config.getString("discord_irc_bot_token")).login().join();
         discordNetworkBot = new DiscordApiBuilder().setToken(config.getString("discord_network_bot_token")).login().join();
         discordIrcBot.updateStatus(UserStatus.fromString(config.getString("discord_irc_bot_playing_message")));
@@ -43,10 +75,10 @@ public class NetworkUnifier extends Plugin implements Listener {
                 .addServer(config.getString("irc_host"))
                 .addAutoJoinChannel(config.getString("irc_channel"))
                 .setNickservPassword(config.getString("irc_network_bot_pass"))
-                .addListener(new IrcToGameHandler(this.getProxy(), this, config))
+                .addListener(new IrcToGameHandler(proxy, plugin, config))
                 .setAutoReconnect(true)
                 .buildConfiguration(),
-                getLogger());
+                logger);
 
         ircDiscordBot = new IrcBot(new Configuration.Builder()
                 .setName(config.getString("irc_discord_bot_name"))
@@ -56,17 +88,45 @@ public class NetworkUnifier extends Plugin implements Listener {
                 .addListener(new IrcToDiscordHandler(config, discordIrcBot))
                 .setAutoReconnect(true)
                 .buildConfiguration(),
-                getLogger());
+                logger);
 
         ircNetworkBot.startBot();
         ircDiscordBot.startBot();
 
-        DiscordToIrcHandler discordToIrc = new DiscordToIrcHandler(config, getLogger(), ircDiscordBot);
-        discordToIrc.startBot();
+        discordToIrcHandler = new DiscordToIrcHandler(config, logger, ircDiscordBot);
+        discordToIrcHandler.startBot();
 
-        getProxy().getPluginManager().registerListener(this, new JoinQuitEventHandler(config, getLogger(), ircNetworkBot, gameChannel));
-        getProxy().getPluginManager().registerListener(this, new GameToIrcHandler(config, ircNetworkBot));
+        joinQuitEventListener = new JoinQuitEventHandler(config, logger, ircNetworkBot, gameChannel);
+        gameToIrcListener = new GameToIrcHandler(config, ircNetworkBot);
 
+        proxy.getPluginManager().registerListener(plugin, joinQuitEventListener);
+        proxy.getPluginManager().registerListener(plugin, gameToIrcListener);
+    }
+
+    public static void unload() {
+        discordIrcBot.disconnect();
+        discordNetworkBot.disconnect();
+
+        discordToIrcHandler.stopBot();
+
+        ircNetworkBot.stopBot();
+        ircDiscordBot.stopBot();
+
+        proxy.getPluginManager().unregisterListener(joinQuitEventListener);
+        proxy.getPluginManager().unregisterListener(gameToIrcListener);
+    }
+
+    public static void sendMessage(CommandSender sender, String message) {
+        // ha.h.a. get. magickd wit &k
+        sender.sendMessage(new TextComponent(
+                ChatColor.MAGIC + "" + ChatColor.DARK_GRAY + "|" +
+                ChatColor.GRAY + "NetworkUnifier" +
+                ChatColor.MAGIC + "" + ChatColor.DARK_GRAY + "|" +
+                " " + ChatColor.GRAY + message));
+    }
+
+    public static String getVersion() {
+        return version;
     }
 
     private void loadConfig() {

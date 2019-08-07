@@ -18,14 +18,17 @@ public class IrcBot {
     }
 
     public void startBot() {
-        Thread botThread = new Thread(() -> {
-            try {
-                bot.startBot();
-            } catch (IOException | IrcException e) {
-                logger.info(e.toString());
-            }
-        });
-        botThread.start();
+        try {
+            bot.startBot();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (IrcException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void stopBot() {
+        bot.close();
     }
 
     public void sendMessage(String target, String message) {
