@@ -20,6 +20,8 @@ public class JoinQuitEventHandler implements Listener {
     Channel gameChannel;
     Logger logger;
 
+    String greeting;
+    String farewell;
     List<String> greetings;
     List<String> farewells;
 
@@ -28,12 +30,18 @@ public class JoinQuitEventHandler implements Listener {
     boolean quirkyMessages;
     boolean specialFarewellGreetings;
     int quirkyMessageFrequency;
+    String quirkyGreeting;
+    String quirkyFarewell;
 
     public JoinQuitEventHandler(Configuration config, Logger logger, IrcBot bot, Channel gameChannel) {
         super();
         this.bot = bot;
         this.gameChannel = gameChannel;
         this.logger = logger;
+
+        greeting = config.getString("greeting_message");
+        farewell = config.getString("farewell_message");
+
         if (specialFarewellGreetings = config.getBoolean("enable_special_farewells_and_greetings")) {
             farewells = config.getStringList("message_farewells");
             greetings = config.getStringList("message_greetings");
@@ -42,9 +50,11 @@ public class JoinQuitEventHandler implements Listener {
         }
         if (quirkyMessages = config.getBoolean("enable_special_quirky_message")) {
             quirkyMessageFrequency = config.getInt("quirky_message_frequency");
+            quirkyGreeting = config.getString("quirky_greeting_message");
+            quirkyFarewell = config.getString("quirky_farewell_message");
         }
         ircChannel = config.getString("irc_channel");
-        logger.info("Sending game greetings to #" + ircChannel + " on IRC and #" + gameChannel.toString() + " on Discord.");
+        logger.info("Sending game greetings/farewells to #" + ircChannel + " on IRC and #" + gameChannel.toString() + " on Discord.");
     }
 
     @EventHandler
@@ -66,11 +76,9 @@ public class JoinQuitEventHandler implements Listener {
     private void sendJoins(String name) {
         String message;
         if (quirkyMessages && (rand.nextInt(quirkyMessageFrequency) == 1)) {
-            message = "Running " + name + ".exe ...";
-        } else if (specialFarewellGreetings) {
-            message = name + " joined the network." + getRandomWelcome();
+            message = getQuirkyGreeting(name);
         } else {
-            message = name + " joined the network.";
+            message = getGreeting(name);
         }
         sendToIrc(message);
         sendToDiscord(message);
@@ -79,14 +87,36 @@ public class JoinQuitEventHandler implements Listener {
     private void sendQuits(String name) {
         String message;
         if (quirkyMessages && (rand.nextInt(quirkyMessageFrequency) == 1)) {
-            message = name + ".exe has stopped working.";
-        } else if (specialFarewellGreetings) {
-            message = name + " left the network." + getRandomFarewell();
+            message = getQuirkyFarewell(name);
         } else {
-            message = name + " left the network.";
+            message = getFarewell(name);
         }
         sendToIrc(message);
         sendToDiscord(message);
+    }
+
+    private String getQuirkyGreeting(String name) {
+        return quirkyGreeting.replace("%USER%", name);
+    }
+
+    private String getQuirkyFarewell(String name) {
+        return quirkyFarewell.replace("%USER", name);
+    }
+
+    private String getFarewell(String name) {
+        if (specialFarewellGreetings) {
+            return farewell.replace("%USER%", name).replace("%QUIRKY%", getRandomFarewell());
+        } else {
+            return farewell.replace("%USER%", name);
+        }
+    }
+
+    private String getGreeting(String name) {
+        if (specialFarewellGreetings) {
+            return greeting.replace("%USER%", name).replace("%QUIRKY%", getRandomGreeting());
+        } else {
+            return greeting.replace("%USER%", name);
+        }
     }
 
     private void sendToIrc(String message) {
@@ -101,7 +131,7 @@ public class JoinQuitEventHandler implements Listener {
         return farewells.get(rand.nextInt(farewells.size() - 1 ));
     }
 
-    public String getRandomWelcome() {
+    public String getRandomGreeting() {
         return greetings.get(rand.nextInt(greetings.size() - 1 ));
     }
 }
