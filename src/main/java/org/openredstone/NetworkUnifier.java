@@ -27,6 +27,7 @@ public class NetworkUnifier extends Plugin implements Listener {
     static net.md_5.bungee.config.Configuration config;
     static Logger logger;
     static Plugin plugin;
+    static File dataFolder;
     static ProxyServer proxy;
     static String version;
 
@@ -47,12 +48,11 @@ public class NetworkUnifier extends Plugin implements Listener {
 
         logger = getLogger();
         plugin = this;
+        dataFolder = plugin.getDataFolder();
         proxy = getProxy();
         version = getDescription().getVersion();
 
         proxy.getPluginManager().registerCommand(this, new NetworkUnifierCommand("networkunifier", "networkunifier", "nu"));
-
-        loadConfig();
 
         load();
 
@@ -64,6 +64,9 @@ public class NetworkUnifier extends Plugin implements Listener {
     }
 
     public static void load() {
+
+        loadConfig();
+
         discordIrcBot = new DiscordApiBuilder().setToken(config.getString("discord_irc_bot_token")).login().join();
         discordNetworkBot = new DiscordApiBuilder().setToken(config.getString("discord_network_bot_token")).login().join();
         discordIrcBot.updateStatus(UserStatus.fromString(config.getString("discord_irc_bot_playing_message")));
@@ -129,16 +132,17 @@ public class NetworkUnifier extends Plugin implements Listener {
         return version;
     }
 
-    private void loadConfig() {
+    private static void loadConfig() {
         try {
-            if (!getDataFolder().exists()) {
-                getDataFolder().mkdir();
+            if (!dataFolder.exists()) {
+                dataFolder.mkdir();
             }
-            File file = new File(getDataFolder(), "config.yml");
+            File file = new File(dataFolder, "config.yml");
             if (!file.exists()) {
                 file.createNewFile();
             }
-            config = ConfigurationProvider.getProvider(YamlConfiguration.class).load(new File(getDataFolder(), "config.yml"));
+
+            config = ConfigurationProvider.getProvider(YamlConfiguration.class).load(new File(dataFolder, "config.yml"));
 
         } catch (IOException e) {
             e.printStackTrace();
