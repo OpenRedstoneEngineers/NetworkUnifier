@@ -19,9 +19,15 @@ public class GameToIrcHandler implements Listener {
 
     @EventHandler
     public void onMessage(ChatEvent e) {
+
+        if (e.isCancelled()) {
+            return;
+        }
+
         ProxiedPlayer pp = (ProxiedPlayer) e.getSender();
         if ((e.getMessage().length() > 0) && (!e.getMessage().startsWith("/"))) {
             bot.sendMessage(config.getString("irc_channel"), "\u000307" + pp.getDisplayName() + "\u000f: " + e.getMessage().replaceAll("&([0-9]|[abcdefklmnor])", "").trim());
         }
+
     }
 }
