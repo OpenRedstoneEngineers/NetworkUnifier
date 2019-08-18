@@ -67,7 +67,7 @@ public class IrcToGameHandler extends ListenerAdapter {
 
     @Override
     public void onKick(KickEvent event) {
-        sendToGame(event.getUser().getNick(), "§cIRC §7| %USER% was kicked from IRC");
+        sendToGame(event.getRecipient().getNick(), "§cIRC §7| %USER% was kicked from IRC");
     }
 
     @Override
