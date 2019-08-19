@@ -100,7 +100,7 @@ public class JoinQuitEventHandler implements Listener {
     }
 
     private String getQuirkyFarewell(String name) {
-        return quirkyFarewell.replace("%USER", name);
+        return quirkyFarewell.replace("%USER%", name);
     }
 
     private String getFarewell(String name) {
