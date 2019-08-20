@@ -122,9 +122,9 @@ public class NetworkUnifier extends Plugin implements Listener {
     public static void sendMessage(CommandSender sender, String message) {
         // ha.h.a. get. magickd wit &k
         sender.sendMessage(new TextComponent(
-                ChatColor.MAGIC + "" + ChatColor.DARK_GRAY + "|" +
+                ChatColor.DARK_GRAY + "[" +
                 ChatColor.GRAY + "NetworkUnifier" +
-                ChatColor.MAGIC + "" + ChatColor.DARK_GRAY + "|" +
+                ChatColor.DARK_GRAY + "]" +
                 " " + ChatColor.GRAY + message));
     }
 
