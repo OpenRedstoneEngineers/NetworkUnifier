@@ -2,5 +2,5 @@ idea/
 .*
 !.gitignore
 *.iml
-out/
+target/
 config.yml
