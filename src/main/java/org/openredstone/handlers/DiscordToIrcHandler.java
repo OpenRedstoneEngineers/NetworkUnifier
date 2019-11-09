@@ -4,6 +4,7 @@ import net.md_5.bungee.config.Configuration;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.emoji.CustomEmoji;
+import org.javacord.api.entity.message.MessageAttachment;
 import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
@@ -40,10 +41,11 @@ public class DiscordToIrcHandler {
                 return;
             }
 
-            if (!event.getMessageContent().isEmpty() && !ignoredDiscordIds.contains(event.getMessageAuthor().getIdAsString())) {
+            if ((!event.getMessageContent().isEmpty() || !event.getMessageAttachments().isEmpty()) && !ignoredDiscordIds.contains(event.getMessageAuthor().getIdAsString())) {
                 List<User> mentionedUsers = event.getMessage().getMentionedUsers();
                 List<CustomEmoji> mentionedEmojis = event.getMessage().getCustomEmojis();
                 List<Role> mentionedRoles = event.getMessage().getMentionedRoles();
+                List<MessageAttachment> attachments = event.getMessageAttachments();
 
                 String message = event.getMessageContent();
 
@@ -61,6 +63,14 @@ public class DiscordToIrcHandler {
                     String toReplace = "<@&" + role.getIdAsString() + ">";
                     message = message.replaceAll(toReplace, "@" + role.getName());
                 }
+
+                StringBuilder attachmentUrls = new StringBuilder();
+                for (MessageAttachment a : attachments) {
+                    attachmentUrls.append(" ").append(a.getUrl());
+                }
+
+                message += attachmentUrls.toString();
+                message = message.trim();
 
                 bot.sendMessage(config.getString("irc_channel"), "\u000307" + event.getMessageAuthor().getDisplayName() + "\u000f: " + message);
 
