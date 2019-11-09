@@ -49,7 +49,7 @@ public class IrcToGameHandler extends ListenerAdapter {
 
     @Override
     public void onMessage(MessageEvent event) throws Exception {
-        sendToGame(event.getUser().getNick(), event.getMessage());
+        sendToGame(event.getUser().getNick(), getSenderFormat(event.getUser().getNick(), event.getMessage()));
     }
     @Override
     public void onJoin(JoinEvent event) {
@@ -63,7 +63,7 @@ public class IrcToGameHandler extends ListenerAdapter {
 
     @Override
     public void onTopic(TopicEvent event) {
-        sendToGame(event.getUser().getNick(), "§cIRC §7| %USER% set the topic to: " + event.getTopic());
+        sendToGame(event.getUser().getNick(), "§cIRC §7| %USER% set the topic to: " + event.getTopic().replaceAll("§", "&"));
     }
 
     @Override
@@ -89,8 +89,9 @@ public class IrcToGameHandler extends ListenerAdapter {
         if (config.getStringList("irc_to_game_ignore_names").contains(user)) {
             return;
         }
+        String finalMessage = message.replaceFirst("%USER%", user);
         ps.getScheduler().runAsync(p, () -> {
-            BaseComponent[] bs = (new ComponentBuilder(renderTextComponent(getSenderFormat(user, message)))).create();
+            BaseComponent[] bs = (new ComponentBuilder(renderTextComponent(finalMessage))).create();
             for (ProxiedPlayer player : ps.getPlayers()) {
                 player.sendMessage(bs);
             }
