@@ -19,6 +19,7 @@ public class JoinQuitEventHandler implements Listener {
     IrcBot bot;
     Channel gameChannel;
     Logger logger;
+    Configuration config;
 
     String greeting;
     String farewell;
@@ -35,6 +36,7 @@ public class JoinQuitEventHandler implements Listener {
 
     public JoinQuitEventHandler(Configuration config, Logger logger, IrcBot bot, Channel gameChannel) {
         super();
+        this.config = config;
         this.bot = bot;
         this.gameChannel = gameChannel;
         this.logger = logger;
@@ -54,7 +56,6 @@ public class JoinQuitEventHandler implements Listener {
             quirkyFarewell = config.getString("quirky_farewell_message");
         }
         ircChannel = config.getString("irc_channel");
-        logger.info("Sending game greetings/farewells to #" + ircChannel + " on IRC and #" + gameChannel.toString() + " on Discord.");
     }
 
     @EventHandler
@@ -80,8 +81,8 @@ public class JoinQuitEventHandler implements Listener {
         } else {
             message = getGreeting(name);
         }
-        sendToIrc(message);
-        sendToDiscord(message);
+        if (config.getBoolean("irc_enabled")) sendToIrc(message);
+        if (config.getBoolean("discord_enabled")) sendToDiscord(message);
     }
 
     private void sendQuits(String name) {
@@ -91,8 +92,8 @@ public class JoinQuitEventHandler implements Listener {
         } else {
             message = getFarewell(name);
         }
-        sendToIrc(message);
-        sendToDiscord(message);
+        if (config.getBoolean("irc_enabled")) sendToIrc(message);
+        if (config.getBoolean("discord_enabled")) sendToDiscord(message);
     }
 
     private String getQuirkyGreeting(String name) {

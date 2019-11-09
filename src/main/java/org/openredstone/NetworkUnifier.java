@@ -67,37 +67,38 @@ public class NetworkUnifier extends Plugin implements Listener {
 
         loadConfig();
 
-        discordIrcBot = new DiscordApiBuilder().setToken(config.getString("discord_irc_bot_token")).login().join();
-        discordNetworkBot = new DiscordApiBuilder().setToken(config.getString("discord_network_bot_token")).login().join();
-        discordIrcBot.updateStatus(UserStatus.fromString(config.getString("discord_irc_bot_playing_message")));
-        discordNetworkBot.updateStatus(UserStatus.fromString(config.getString("discord_network_bot_playing_message")));
-        gameChannel = discordNetworkBot.getServerTextChannelById(config.getString("discord_channel_id")).get();
+        if (config.getBoolean("irc_enabled")) {
+            ircNetworkBot = new IrcBot(new Configuration.Builder()
+                    .setName(config.getString("irc_network_bot_name"))
+                    .addServer(config.getString("irc_host"))
+                    .addAutoJoinChannel(config.getString("irc_channel"))
+                    .setNickservPassword(config.getString("irc_network_bot_pass"))
+                    .addListener(new IrcToGameHandler(proxy, plugin, config))
+                    .setAutoReconnect(true)
+                    .buildConfiguration(),
+                    logger);
+            ircNetworkBot.startBot();
+        }
 
-        ircNetworkBot = new IrcBot(new Configuration.Builder()
-                .setName(config.getString("irc_network_bot_name"))
-                .addServer(config.getString("irc_host"))
-                .addAutoJoinChannel(config.getString("irc_channel"))
-                .setNickservPassword(config.getString("irc_network_bot_pass"))
-                .addListener(new IrcToGameHandler(proxy, plugin, config))
-                .setAutoReconnect(true)
-                .buildConfiguration(),
-                logger);
-
-        ircDiscordBot = new IrcBot(new Configuration.Builder()
-                .setName(config.getString("irc_discord_bot_name"))
-                .addServer(config.getString("irc_host"))
-                .addAutoJoinChannel(config.getString("irc_channel"))
-                .setNickservPassword(config.getString("irc_discord_bot_pass"))
-                .addListener(new IrcToDiscordHandler(config, discordIrcBot))
-                .setAutoReconnect(true)
-                .buildConfiguration(),
-                logger);
-
-        ircNetworkBot.startBot();
-        ircDiscordBot.startBot();
-
-        discordToIrcHandler = new DiscordToIrcHandler(config, logger, ircDiscordBot);
-        discordToIrcHandler.startBot();
+        if (config.getBoolean("discord_enabled")) {
+            discordIrcBot = new DiscordApiBuilder().setToken(config.getString("discord_irc_bot_token")).login().join();
+            discordNetworkBot = new DiscordApiBuilder().setToken(config.getString("discord_network_bot_token")).login().join();
+            discordIrcBot.updateStatus(UserStatus.fromString(config.getString("discord_irc_bot_playing_message")));
+            discordNetworkBot.updateStatus(UserStatus.fromString(config.getString("discord_network_bot_playing_message")));
+            gameChannel = discordNetworkBot.getServerTextChannelById(config.getString("discord_channel_id")).get();
+            ircDiscordBot = new IrcBot(new Configuration.Builder()
+                    .setName(config.getString("irc_discord_bot_name"))
+                    .addServer(config.getString("irc_host"))
+                    .addAutoJoinChannel(config.getString("irc_channel"))
+                    .setNickservPassword(config.getString("irc_discord_bot_pass"))
+                    .addListener(new IrcToDiscordHandler(config, discordIrcBot))
+                    .setAutoReconnect(true)
+                    .buildConfiguration(),
+                    logger);
+            ircDiscordBot.startBot();
+            discordToIrcHandler = new DiscordToIrcHandler(config, logger, ircDiscordBot);
+            discordToIrcHandler.startBot();
+        }
 
         joinQuitEventListener = new JoinQuitEventHandler(config, logger, ircNetworkBot, gameChannel);
         gameToIrcListener = new GameToIrcHandler(config, ircNetworkBot);
@@ -107,20 +108,22 @@ public class NetworkUnifier extends Plugin implements Listener {
     }
 
     public static void unload() {
-        discordIrcBot.disconnect();
-        discordNetworkBot.disconnect();
+        if (config.getBoolean("discord_enabled")) {
+            discordIrcBot.disconnect();
+            discordNetworkBot.disconnect();
+            discordToIrcHandler.stopBot();
+            ircDiscordBot.stopBot();
+        }
 
-        discordToIrcHandler.stopBot();
-
-        ircNetworkBot.stopBot();
-        ircDiscordBot.stopBot();
+        if (config.getBoolean("irc_enabled")) {
+            ircNetworkBot.stopBot();
+        }
 
         proxy.getPluginManager().unregisterListener(joinQuitEventListener);
         proxy.getPluginManager().unregisterListener(gameToIrcListener);
     }
 
     public static void sendMessage(CommandSender sender, String message) {
-        // ha.h.a. get. magickd wit &k
         sender.sendMessage(new TextComponent(
                 ChatColor.DARK_GRAY + "[" +
                 ChatColor.GRAY + "NetworkUnifier" +

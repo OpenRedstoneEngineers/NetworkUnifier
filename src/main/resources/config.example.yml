@@ -1,3 +1,4 @@
+irc_enabled: true
 irc_channel: "#orebotspam"
 irc_host: "irc.esper.net"
 irc_password: "REDACTED"
@@ -5,6 +6,7 @@ irc_discord_bot_name: "OREDiscord"
 irc_discord_bot_pass: "REDACTED"
 irc_network_bot_name: "ORENetwork"
 irc_network_bot_pass: "REDACTED"
+discord_enabled: true
 discord_channel_id: "538879606527098900"
 discord_irc_bot_token: "REDACTED"
 discord_irc_bot_playing_message: "on the ORE Network"
