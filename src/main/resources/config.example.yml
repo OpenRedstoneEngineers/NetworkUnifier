@@ -51,3 +51,6 @@ message_greetings:
   - "Unleash the corr!"
   - "Quick, ask Digitalis about linked lists!"
   - "Ask for nicktatorship while you're at it!"
+custom_irc_ingame_formatting:
+  OREBot: "§cOREBot§7 »§r %MESSAGE%"
+  OREModded: "§cModded§7 |§r %MESSAGE%"

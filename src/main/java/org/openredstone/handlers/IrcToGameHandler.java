@@ -8,6 +8,7 @@ import net.md_5.bungee.config.Configuration;
 import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.*;
 
+import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,7 +49,7 @@ public class IrcToGameHandler extends ListenerAdapter {
 
     @Override
     public void onMessage(MessageEvent event) throws Exception {
-        sendToGame(event.getUser().getNick(), "§cIRC §7| §f%USER%§7:§r " + event.getMessage().replaceAll("§", "&"));
+        sendToGame(event.getUser().getNick(), event.getMessage());
     }
     @Override
     public void onJoin(JoinEvent event) {
@@ -88,13 +89,33 @@ public class IrcToGameHandler extends ListenerAdapter {
         if (config.getStringList("irc_to_game_ignore_names").contains(user)) {
             return;
         }
-
-        String messageToSend = message.replaceAll("%USER%", user);
         ps.getScheduler().runAsync(p, () -> {
-            BaseComponent[] bs = (new ComponentBuilder(renderTextComponent(messageToSend))).create();
+            BaseComponent[] bs = (new ComponentBuilder(renderTextComponent(getSenderFormat(user, message)))).create();
             for (ProxiedPlayer player : ps.getPlayers()) {
                 player.sendMessage(bs);
             }
         });
+    }
+
+    private String getSenderFormat(String username, String message) {
+        String format;
+        if (isCustomSender(username)) {
+            format = config.getSection("custom_irc_ingame_formatting").getString(username).replace("%MESSAGE%", message.replaceAll("§", "&"));
+        } else {
+            format = ("§cIRC §7| §f%USER%§7:§r " + message.replaceAll("§", "&")).replaceFirst("%USER%", username);
+        }
+        return format;
+    }
+
+    private boolean isCustomSender(String username) {
+        Collection<String> keys = config.getSection("custom_irc_ingame_formatting").getKeys();
+
+        for (String key : keys) {
+            if (key.equals(username)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
