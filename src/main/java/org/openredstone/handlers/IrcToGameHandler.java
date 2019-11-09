@@ -48,7 +48,7 @@ public class IrcToGameHandler extends ListenerAdapter {
 
     @Override
     public void onMessage(MessageEvent event) throws Exception {
-        sendToGame(event.getUser().getNick(), "§cIRC §7| §f%USER%§7:§r " + event.getMessage());
+        sendToGame(event.getUser().getNick(), "§cIRC §7| §f%USER%§7:§r " + event.getMessage().replaceAll("§", "&"));
     }
     @Override
     public void onJoin(JoinEvent event) {
