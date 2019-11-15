@@ -103,7 +103,7 @@ public class IrcToGameHandler extends ListenerAdapter {
         if (isCustomSender(username)) {
             format = config.getSection("custom_irc_ingame_formatting").getString(username).replace("%MESSAGE%", message.replaceAll("§", "&"));
         } else {
-            format = ("§cIRC §7| §8%USER%§7:§r " + message.replaceAll("§", "&")).replaceFirst("%USER%", username);
+            format = ("§cIRC §7| %USER%:§r " + message.replaceAll("§", "&")).replaceFirst("%USER%", username);
         }
         return format;
     }
