@@ -75,12 +75,11 @@ public class IrcToGameHandler extends ListenerAdapter {
     public void onPrivateMessage(PrivateMessageEvent event) throws Exception {
         String user = event.getMessage().substring(0,event.getMessage().indexOf(" "));
         String message = event.getMessage().substring(event.getMessage().indexOf(" "));
-        for (ProxiedPlayer player : ps.getPlayers()) {
-            if (player.getDisplayName().equals(user)) {
-                player.sendMessage(new TextComponent(message));
-                event.respondPrivateMessage("Sent to " + user + ": " + event.getMessage());
-                return;
-            }
+        ProxiedPlayer player = ps.getPlayer(user);
+        if (player != null) {
+            player.sendMessage(new TextComponent("§cIRC §7| " + event.getUser().getNick() + " §7-> §cme§7:" + message));
+            event.respondPrivateMessage("Sent to " + user + ": " + message);
+            return;
         }
         event.respondPrivateMessage("User \"" + user + "\" not found.");
     }
