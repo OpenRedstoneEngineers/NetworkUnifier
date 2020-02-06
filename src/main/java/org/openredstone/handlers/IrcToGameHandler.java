@@ -77,7 +77,7 @@ public class IrcToGameHandler extends ListenerAdapter {
         String message = event.getMessage().substring(event.getMessage().indexOf(" "));
         ProxiedPlayer player = ps.getPlayer(user);
         if (player != null) {
-            player.sendMessage(new TextComponent("§cIRC §7| " + event.getUser().getNick() + " §7-> §cme§7:" + message));
+            player.sendMessage(new TextComponent("§cIRC §7| " + event.getUser().getNick() + " §7-> §cme§7:§r" + message));
             event.respondPrivateMessage("Sent to " + user + ": " + message);
             return;
         }
