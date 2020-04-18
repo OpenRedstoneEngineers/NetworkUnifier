@@ -26,7 +26,7 @@ public class StatusManager {
         this.channel = api.getServerTextChannelById(config.getString("discord_status_channel_id")).get();
         this.plugin = plugin;
         plugin.getProxy().getScheduler().schedule(this.plugin, this::checkServers, 1, config.getInt("status_update_frequency"), TimeUnit.SECONDS);
-        plugin.getProxy().getScheduler().schedule(this.plugin, this::updateStatus, 2, config.getInt("status_update_frequency"), TimeUnit.SECONDS);
+        plugin.getProxy().getScheduler().schedule(this.plugin, () -> updateStatus(generateStatusMessage()), 2, config.getInt("status_update_frequency"), TimeUnit.SECONDS);
     }
 
     private void checkServers() {
@@ -41,14 +41,14 @@ public class StatusManager {
         }
     }
 
-    private void updateStatus() {
+    private String generateStatusMessage() {
         StringBuilder message = new StringBuilder();
         message.append("**Status**:\n**").append(plugin.getProxy().getPlayers().size()).append("** Player(s) online:\n");
         for (ServerInfo server : plugin.getProxy().getServers().values()) {
             if (serversOnline.containsKey(server.getName()) && serversOnline.get(server.getName())) {
                 message.append("**").append(server.getName()).append("** ");
                 Collection<ProxiedPlayer> players = server.getPlayers();
-                if (players.size() == 0) {
+                if (players.isEmpty()) {
                     message.append("(**0**)");
                 } else {
                     message.append("(**").append(players.size()).append("**) : `");
@@ -65,6 +65,10 @@ public class StatusManager {
             }
             message.append("\n");
         }
+        return message.toString();
+    }
+
+    private void updateStatus(String message) {
         try {
             MessageSet messages = ((ServerTextChannel) this.channel).getMessages(1).get();
             if (messages.isEmpty()) {
