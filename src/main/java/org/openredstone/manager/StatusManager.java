@@ -32,11 +32,7 @@ public class StatusManager {
     private void checkServers() {
         for (ServerInfo server : plugin.getProxy().getServers().values()) {
             server.ping((ServerPing result, Throwable error) -> {
-                if (error == null) {
-                    serversOnline.put(server.getName(), true);
-                } else {
-                    serversOnline.put(server.getName(), false);
-                }
+                serversOnline.put(server.getName(), error == null);
             });
         }
     }
