@@ -16,6 +16,7 @@ import org.javacord.api.entity.user.UserStatus;
 import org.openredstone.bots.IrcBot;
 import org.openredstone.commands.NetworkUnifierCommand;
 import org.openredstone.handlers.*;
+import org.openredstone.manager.StatusManager;
 import org.pircbotx.Configuration;
 
 import java.io.File;
@@ -98,6 +99,7 @@ public class NetworkUnifier extends Plugin implements Listener {
             ircDiscordBot.startBot();
             discordToIrcHandler = new DiscordToIrcHandler(config, logger, ircDiscordBot);
             discordToIrcHandler.startBot();
+            new StatusManager(config, discordNetworkBot, plugin);
         }
 
         joinQuitEventListener = new JoinQuitEventHandler(config, logger, ircNetworkBot, gameChannel);

@@ -6,8 +6,10 @@ irc_discord_bot_name: "OREDiscord"
 irc_discord_bot_pass: "REDACTED"
 irc_network_bot_name: "ORENetwork"
 irc_network_bot_pass: "REDACTED"
+status_update_frequency: 60
 discord_enabled: true
 discord_channel_id: "538879606527098900"
+discord_status_channel_id: "701115144842903615"
 discord_irc_bot_token: "REDACTED"
 discord_irc_bot_playing_message: "on the ORE Network"
 discord_network_bot_token: "REDACTED"
