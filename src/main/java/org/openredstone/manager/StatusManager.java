@@ -42,9 +42,8 @@ public class StatusManager {
     }
 
     private void updateStatus() {
-        Collection<ServerInfo> servers = plugin.getProxy().getConfig().getServers().values();
         StringBuilder message = new StringBuilder();
-        message.append("**Status**:\n**Servers**:\n");
+        message.append("**Status**:\n**").append(plugin.getProxy().getPlayers().size()).append("** Player(s) online:\n");
         for (ServerInfo server : plugin.getProxy().getServers().values()) {
             if (serversOnline.containsKey(server.getName()) && serversOnline.get(server.getName())) {
                 message.append("**").append(server.getName()).append("** ");
