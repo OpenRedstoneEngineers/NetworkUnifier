@@ -14,13 +14,18 @@ import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.user.UserStatus;
 import org.openredstone.bots.IrcBot;
-import org.openredstone.commands.NetworkUnifierCommand;
+import org.openredstone.commands.minecraft.DiscordCommand;
+import org.openredstone.commands.minecraft.NetworkUnifierCommand;
 import org.openredstone.handlers.*;
+import org.openredstone.manager.AccountManager;
+import org.openredstone.manager.DiscordCommandManager;
+import org.openredstone.manager.QueryManager;
 import org.openredstone.manager.StatusManager;
 import org.pircbotx.Configuration;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.logging.Logger;
 
 public class NetworkUnifier extends Plugin implements Listener {
@@ -43,6 +48,11 @@ public class NetworkUnifier extends Plugin implements Listener {
     static Listener gameToIrcListener;
 
     static DiscordToIrcHandler discordToIrcHandler;
+
+    static StatusManager statusManager;
+    static QueryManager queryManager;
+    static AccountManager accountManager;
+    static DiscordCommandManager discordCommandManager;
 
     @Override
     public void onEnable() {
@@ -67,6 +77,20 @@ public class NetworkUnifier extends Plugin implements Listener {
     public static void load() {
 
         loadConfig();
+
+        try {
+            queryManager = new QueryManager(
+                    config.getString("database_host"),
+                    config.getInt("database_port"),
+                    config.getString("database_name"),
+                    config.getString("database_user"),
+                    config.getString("database_pass")
+            );
+            accountManager = new AccountManager(queryManager);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
 
         if (config.getBoolean("irc_enabled")) {
             ircNetworkBot = new IrcBot(new Configuration.Builder()
@@ -99,7 +123,8 @@ public class NetworkUnifier extends Plugin implements Listener {
             ircDiscordBot.startBot();
             discordToIrcHandler = new DiscordToIrcHandler(config, logger, ircDiscordBot);
             discordToIrcHandler.startBot();
-            new StatusManager(config, discordNetworkBot, plugin);
+            statusManager = new StatusManager(config, discordNetworkBot, plugin);
+            discordCommandManager = new DiscordCommandManager(discordNetworkBot, accountManager, config.getString("discord_command_character").charAt(0));
         }
 
         joinQuitEventListener = new JoinQuitEventHandler(config, logger, ircNetworkBot, gameChannel);
@@ -107,6 +132,8 @@ public class NetworkUnifier extends Plugin implements Listener {
 
         proxy.getPluginManager().registerListener(plugin, joinQuitEventListener);
         proxy.getPluginManager().registerListener(plugin, gameToIrcListener);
+        proxy.getPluginManager().registerCommand(plugin, new DiscordCommand(accountManager,"discord", "networkunifier.discord", "discord"));
+
     }
 
     public static void unload() {

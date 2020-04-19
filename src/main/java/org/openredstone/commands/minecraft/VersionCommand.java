@@ -1,10 +1,10 @@
-package org.openredstone.commands;
+package org.openredstone.commands.minecraft;
 
 import net.md_5.bungee.api.CommandSender;
 import org.openredstone.NetworkUnifier;
 
-public class ReloadCommand extends NetworkUnifierSubCommand{
-    public ReloadCommand(String permission) {
+public class VersionCommand extends NetworkUnifierSubCommand {
+    public VersionCommand(String permission) {
         super(permission);
     }
 
@@ -15,10 +15,7 @@ public class ReloadCommand extends NetworkUnifierSubCommand{
             return false;
         }
 
-        NetworkUnifier.unload();
-        NetworkUnifier.load();
-
-        NetworkUnifier.sendMessage(sender, "Reloaded NetworkUnifier");
+        NetworkUnifier.sendMessage(sender, "Version " + NetworkUnifier.getVersion());
 
         return true;
     }

@@ -1,4 +1,4 @@
-package org.openredstone.commands;
+package org.openredstone.commands.minecraft;
 
 import net.md_5.bungee.api.CommandSender;
 
