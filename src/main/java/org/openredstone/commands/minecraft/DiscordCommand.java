@@ -29,6 +29,11 @@ public class DiscordCommand extends Command {
             return;
         }
 
+        if (accountManager.userIsLinkedById(proxiedPlayer.getUniqueId().toString())) {
+            NetworkUnifier.sendMessage(commandSender, "You are already linked to Discord.");
+            return;
+        }
+
         String token = accountManager.createAccount(proxiedPlayer.getUniqueId().toString(), proxiedPlayer.getName());
 
         if (token != null) {
