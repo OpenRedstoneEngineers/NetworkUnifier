@@ -4,7 +4,7 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import org.openredstone.NetworkUnifier;
-import org.openredstone.manager.AccountManager;
+import org.openredstone.managers.AccountManager;
 
 public class DiscordCommand extends Command {
 

@@ -1,4 +1,4 @@
-package org.openredstone.manager;
+package org.openredstone.managers;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -62,18 +62,32 @@ public class QueryManager {
         return resultSet.getString("discord_id");
     }
 
-    public boolean userIsLinked(String userId) throws SQLException {
+    public boolean userIsLinkedByDiscordId(String discordId) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement("SELECT EXISTS (SELECT * FROM `nu_users` WHERE `discord_id`=? AND `m_uuid` IS NOT NULL)");
+        preparedStatement.setString(1, discordId);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        resultSet.next();
+        return resultSet.getBoolean(1);
+    }
+
+    public boolean userIsLinkedById(String userId) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement("SELECT EXISTS (SELECT * FROM `nu_users` WHERE `m_uuid`=? AND `discord_id` IS NOT NULL)");
         preparedStatement.setString(1, userId);
         ResultSet resultSet = preparedStatement.executeQuery();
         resultSet.next();
-        return resultSet.getBoolean(0);
+        return resultSet.getBoolean(1);
     }
 
     public void createUnlinkedUser(String userId, String ign) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO `nu_users` VALUES (?, NULL, ?)");
         preparedStatement.setString(1, userId);
         preparedStatement.setString(2, ign);
+        preparedStatement.execute();
+    }
+
+    public void deleteUser(String userId) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM `nu_users` WHERE `m_uuid`=?");
+        preparedStatement.setString(1, userId);
         preparedStatement.execute();
     }
 

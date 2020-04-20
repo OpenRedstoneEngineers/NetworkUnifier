@@ -1,4 +1,4 @@
-package org.openredstone.manager;
+package org.openredstone.managers;
 
 import org.javacord.api.DiscordApi;
 import org.openredstone.commands.discord.AuthCommand;

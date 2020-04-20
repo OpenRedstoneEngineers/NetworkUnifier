@@ -13,6 +13,11 @@ database_name: "network_link"
 database_user: "nuuser"
 database_pass: "nupass!"
 discord_enabled: true
+discord_server_id: "597852732472426506"
+discord_tracked_tracks:
+  - "default"
+discord_token_size: 4
+discord_token_lifespan: 120
 discord_channel_id: "538879606527098900"
 discord_status_channel_id: "701115144842903615"
 discord_command_character: "!"

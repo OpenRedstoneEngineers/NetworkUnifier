@@ -1,36 +1,45 @@
-package org.openredstone.manager;
+package org.openredstone.managers;
 
 import java.sql.SQLException;
-import java.util.HashMap;
 
 public class AccountManager {
 
     private QueryManager queryManager;
-    private HashMap<String, String> authenticationTokens;
     private TokenManager tokenManager;
 
-    public AccountManager(QueryManager queryManager) {
+    public AccountManager(QueryManager queryManager, int tokenLength, int lifeSpan) {
         this.queryManager = queryManager;
-        this.tokenManager = new TokenManager();
-        this.authenticationTokens = new HashMap<>();
+        this.tokenManager = new TokenManager(tokenLength, lifeSpan);
     }
 
-    public boolean tokenExists(String token) {
-        return authenticationTokens.containsKey(token);
+    public boolean validToken(String token) {
+        if (!tokenManager.hasToken(token)) {
+            return false;
+        }
+
+        if (!tokenManager.tokenIsWithinLifespan(token)) {
+            try {
+                queryManager.deleteUser(tokenManager.getUserFromToken(token));
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            tokenManager.removeToken(token);
+            return false;
+        }
+
+        return true;
     }
 
     public boolean linkDiscordAccount(String token, String discordId) {
-        String userId = authenticationTokens.get(token);
-        authenticationTokens.remove(token);
+        String userId = tokenManager.getUserFromToken(token);
+        tokenManager.removeToken(token);
         return updateAccountDiscordId(userId, discordId);
     }
 
     public String createAccount(String userId, String ign) {
         try {
             queryManager.createUnlinkedUser(userId, ign);
-            String token = tokenManager.generateToken(2);
-            authenticationTokens.put(token, userId);
-            return token;
+            return tokenManager.registerTokenToUser(userId);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -66,9 +75,18 @@ public class AccountManager {
         return false;
     }
 
-    public boolean userIsLinked(String userId) {
+    public boolean userIsLinkedByDiscordId(String discordId) {
         try {
-            return queryManager.userIsLinked(userId);
+            return queryManager.userIsLinkedByDiscordId(discordId);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean userIsLinkedById(String userId) {
+        try {
+            return queryManager.userIsLinkedById(userId);
         } catch (SQLException e) {
             e.printStackTrace();
         }

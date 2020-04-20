@@ -1,4 +1,4 @@
-package org.openredstone.manager;
+package org.openredstone.managers;
 
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;

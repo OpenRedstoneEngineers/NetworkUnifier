@@ -1,5 +1,7 @@
 package org.openredstone;
 
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.LuckPermsProvider;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
@@ -17,15 +19,18 @@ import org.openredstone.bots.IrcBot;
 import org.openredstone.commands.minecraft.DiscordCommand;
 import org.openredstone.commands.minecraft.NetworkUnifierCommand;
 import org.openredstone.handlers.*;
-import org.openredstone.manager.AccountManager;
-import org.openredstone.manager.DiscordCommandManager;
-import org.openredstone.manager.QueryManager;
-import org.openredstone.manager.StatusManager;
+import org.openredstone.listeners.UserTrackListener;
+import org.openredstone.managers.AccountManager;
+import org.openredstone.managers.DiscordCommandManager;
+import org.openredstone.managers.QueryManager;
+import org.openredstone.managers.RoleManager;
+import org.openredstone.managers.StatusManager;
 import org.pircbotx.Configuration;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class NetworkUnifier extends Plugin implements Listener {
@@ -49,8 +54,11 @@ public class NetworkUnifier extends Plugin implements Listener {
 
     static DiscordToIrcHandler discordToIrcHandler;
 
+    static LuckPerms luckPerms;
+
     static StatusManager statusManager;
     static QueryManager queryManager;
+    static RoleManager roleManager;
     static AccountManager accountManager;
     static DiscordCommandManager discordCommandManager;
 
@@ -62,6 +70,8 @@ public class NetworkUnifier extends Plugin implements Listener {
         dataFolder = plugin.getDataFolder();
         proxy = getProxy();
         version = getDescription().getVersion();
+
+        luckPerms = LuckPermsProvider.get();
 
         proxy.getPluginManager().registerCommand(this, new NetworkUnifierCommand("networkunifier", "networkunifier", "nu"));
 
@@ -86,7 +96,7 @@ public class NetworkUnifier extends Plugin implements Listener {
                     config.getString("database_user"),
                     config.getString("database_pass")
             );
-            accountManager = new AccountManager(queryManager);
+            accountManager = new AccountManager(queryManager, config.getInt("discord_token_size"), config.getInt("discord_token_lifespan"));
         } catch (SQLException e) {
             e.printStackTrace();
             return;
@@ -103,14 +113,28 @@ public class NetworkUnifier extends Plugin implements Listener {
                     .buildConfiguration(),
                     logger);
             ircNetworkBot.startBot();
+            gameToIrcListener = new GameToIrcHandler(config, ircNetworkBot);
+            proxy.getPluginManager().registerListener(plugin, gameToIrcListener);
         }
 
         if (config.getBoolean("discord_enabled")) {
-            discordIrcBot = new DiscordApiBuilder().setToken(config.getString("discord_irc_bot_token")).login().join();
             discordNetworkBot = new DiscordApiBuilder().setToken(config.getString("discord_network_bot_token")).login().join();
-            discordIrcBot.updateStatus(UserStatus.fromString(config.getString("discord_irc_bot_playing_message")));
             discordNetworkBot.updateStatus(UserStatus.fromString(config.getString("discord_network_bot_playing_message")));
             gameChannel = discordNetworkBot.getServerTextChannelById(config.getString("discord_channel_id")).get();
+            statusManager = new StatusManager(config, discordNetworkBot, plugin);
+            discordCommandManager = new DiscordCommandManager(discordNetworkBot, accountManager, config.getString("discord_command_character").charAt(0));
+            roleManager = new RoleManager(accountManager, discordNetworkBot, luckPerms, config.getString("discord_server_id"), config.getStringList("discord_tracked_tracks"));
+            if (!roleManager.groupsExistInTrackOnDiscordAlsoThisMethodIsReallyLongButIAmKeepingItToAnnoyPeople()) {
+                logger.log(Level.SEVERE, "Cannot validate that the roles from the specified tracks exist on Discord or LuckPerms!");
+                return;
+            }
+            new UserTrackListener(roleManager, luckPerms);
+            proxy.getPluginManager().registerCommand(plugin, new DiscordCommand(accountManager,"discord", "networkunifier.discord", "discord"));
+        }
+
+        if (config.getBoolean("irc_enabled") && config.getBoolean("discord_enabled")) {
+            discordIrcBot = new DiscordApiBuilder().setToken(config.getString("discord_irc_bot_token")).login().join();
+            discordIrcBot.updateStatus(UserStatus.fromString(config.getString("discord_irc_bot_playing_message")));
             ircDiscordBot = new IrcBot(new Configuration.Builder()
                     .setName(config.getString("irc_discord_bot_name"))
                     .addServer(config.getString("irc_host"))
@@ -123,33 +147,31 @@ public class NetworkUnifier extends Plugin implements Listener {
             ircDiscordBot.startBot();
             discordToIrcHandler = new DiscordToIrcHandler(config, logger, ircDiscordBot);
             discordToIrcHandler.startBot();
-            statusManager = new StatusManager(config, discordNetworkBot, plugin);
-            discordCommandManager = new DiscordCommandManager(discordNetworkBot, accountManager, config.getString("discord_command_character").charAt(0));
         }
 
         joinQuitEventListener = new JoinQuitEventHandler(config, logger, ircNetworkBot, gameChannel);
-        gameToIrcListener = new GameToIrcHandler(config, ircNetworkBot);
 
         proxy.getPluginManager().registerListener(plugin, joinQuitEventListener);
-        proxy.getPluginManager().registerListener(plugin, gameToIrcListener);
-        proxy.getPluginManager().registerCommand(plugin, new DiscordCommand(accountManager,"discord", "networkunifier.discord", "discord"));
 
     }
 
     public static void unload() {
+        if (config.getBoolean("irc_enabled")) {
+            ircNetworkBot.stopBot();
+            proxy.getPluginManager().unregisterListener(gameToIrcListener);
+        }
+
         if (config.getBoolean("discord_enabled")) {
-            discordIrcBot.disconnect();
             discordNetworkBot.disconnect();
+        }
+
+        if (config.getBoolean("irc_enabled") && config.getBoolean("discord_enabled")) {
+            discordIrcBot.disconnect();
             discordToIrcHandler.stopBot();
             ircDiscordBot.stopBot();
         }
 
-        if (config.getBoolean("irc_enabled")) {
-            ircNetworkBot.stopBot();
-        }
-
         proxy.getPluginManager().unregisterListener(joinQuitEventListener);
-        proxy.getPluginManager().unregisterListener(gameToIrcListener);
     }
 
     public static void sendMessage(CommandSender sender, String message) {
