@@ -9,7 +9,11 @@ import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.channel.ServerTextChannel;
 import org.javacord.api.entity.message.MessageSet;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
+import org.javacord.api.util.logging.ExceptionLogger;
 
+import java.awt.*;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
@@ -37,17 +41,22 @@ public class StatusManager {
         }
     }
 
-    private String generateStatusMessage() {
-        StringBuilder message = new StringBuilder();
-        message.append("**Status**:\n**").append(plugin.getProxy().getPlayers().size()).append("** Player(s) online:\n");
+    private EmbedBuilder generateStatusMessage() {
+        EmbedBuilder embedBuilder = new EmbedBuilder()
+                .setColor(Color.RED)
+                .setTitle("Status")
+                .addField("**Players Online**", String.valueOf(plugin.getProxy().getPlayers().size()))
+                .setThumbnail("https://openredstone.org/wp-content/uploads/2018/07/icon-mini.png")
+                .setTimestamp(Instant.now());
+
         for (ServerInfo server : plugin.getProxy().getServers().values()) {
             if (serversOnline.containsKey(server.getName()) && serversOnline.get(server.getName())) {
-                message.append("**").append(server.getName()).append("** ");
                 Collection<ProxiedPlayer> players = server.getPlayers();
                 if (players.isEmpty()) {
-                    message.append("(**0**)");
+                    embedBuilder.addInlineField(server.getName() + " (**0**)", "☹");
                 } else {
-                    message.append("(**").append(players.size()).append("**) : `");
+                    StringBuilder message = new StringBuilder();
+                    message.append("`");
                     String prefix = "";
                     for (ProxiedPlayer player : players) {
                         message.append(prefix);
@@ -55,23 +64,23 @@ public class StatusManager {
                         message.append(player.getName());
                     }
                     message.append("`");
+                    embedBuilder.addInlineField(server.getName() + " (**" + players.size() + "**)", message.toString());
                 }
             } else {
-                message.append("**").append(server.getName()).append("** is offline");
+                embedBuilder.addInlineField(server.getName() + " is **offline**",  "☠");
             }
-            message.append("\n");
         }
-        return message.toString();
+        return embedBuilder;
     }
 
-    private void updateStatus(String message) {
+    private void updateStatus(EmbedBuilder embedBuilder) {
         try {
             MessageSet messages = ((ServerTextChannel) this.channel).getMessages(1).get();
             if (messages.isEmpty()) {
-                ((ServerTextChannel) this.channel).sendMessage(message.toString());
+                ((ServerTextChannel) this.channel).sendMessage(embedBuilder).exceptionally(ExceptionLogger.get());
             } else {
                 if (messages.getNewestMessage().isPresent()) {
-                    messages.getNewestMessage().get().edit(message.toString());
+                    messages.getNewestMessage().get().edit(embedBuilder);
                 }
             }
         } catch (InterruptedException | ExecutionException e) {
