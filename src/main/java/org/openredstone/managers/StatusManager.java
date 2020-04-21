@@ -43,7 +43,7 @@ public class StatusManager {
 
     private EmbedBuilder generateStatusMessage() {
         EmbedBuilder embedBuilder = new EmbedBuilder()
-                .setColor(Color.RED)
+                .setColor(Color.decode("#cd2d0a"))
                 .setTitle("Status")
                 .addField("**Players Online**", String.valueOf(plugin.getProxy().getPlayers().size()))
                 .setThumbnail("https://openredstone.org/wp-content/uploads/2018/07/icon-mini.png")
