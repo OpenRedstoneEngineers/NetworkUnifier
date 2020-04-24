@@ -19,9 +19,10 @@ import org.openredstone.bots.IrcBot;
 import org.openredstone.commands.minecraft.DiscordCommand;
 import org.openredstone.commands.minecraft.NetworkUnifierCommand;
 import org.openredstone.handlers.*;
-import org.openredstone.listeners.UserTrackListener;
+import org.openredstone.listeners.UserUpdateListener;
 import org.openredstone.managers.AccountManager;
 import org.openredstone.managers.DiscordCommandManager;
+import org.openredstone.managers.NicknameManager;
 import org.openredstone.managers.QueryManager;
 import org.openredstone.managers.RoleManager;
 import org.openredstone.managers.StatusManager;
@@ -56,11 +57,12 @@ public class NetworkUnifier extends Plugin implements Listener {
 
     static LuckPerms luckPerms;
 
-    static StatusManager statusManager;
-    static QueryManager queryManager;
-    static RoleManager roleManager;
     static AccountManager accountManager;
     static DiscordCommandManager discordCommandManager;
+    static NicknameManager nicknameManager;
+    static QueryManager queryManager;
+    static RoleManager roleManager;
+    static StatusManager statusManager;
 
     @Override
     public void onEnable() {
@@ -123,12 +125,14 @@ public class NetworkUnifier extends Plugin implements Listener {
             gameChannel = discordNetworkBot.getServerTextChannelById(config.getString("discord_channel_id")).get();
             statusManager = new StatusManager(config, discordNetworkBot, plugin);
             discordCommandManager = new DiscordCommandManager(discordNetworkBot, accountManager, config.getString("discord_command_character").charAt(0));
+            nicknameManager = new NicknameManager(discordNetworkBot, accountManager, config.getString("discord_server_id"));
             roleManager = new RoleManager(accountManager, discordNetworkBot, luckPerms, config.getString("discord_server_id"), config.getStringList("discord_tracked_tracks"));
             if (!roleManager.groupsExistInTrackOnDiscordAlsoThisMethodIsReallyLongButIAmKeepingItToAnnoyPeople()) {
                 logger.log(Level.SEVERE, "Cannot validate that the roles from the specified tracks exist on Discord or LuckPerms!");
                 return;
             }
-            new UserTrackListener(roleManager, luckPerms);
+            new UserUpdateListener(roleManager, accountManager, luckPerms);
+            proxy.getPluginManager().registerListener(plugin, new OnJoinHandler(accountManager, nicknameManager));
             proxy.getPluginManager().registerCommand(plugin, new DiscordCommand(accountManager,"discord", "networkunifier.discord", "discord"));
         }
 

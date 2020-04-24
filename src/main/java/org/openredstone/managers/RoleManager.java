@@ -29,7 +29,11 @@ public class RoleManager {
         this.tracks = tracks;
     }
 
-    public boolean isTracked(String track) {
+    public boolean isGroupTracked(String group) {
+        return api.getTrackManager().getLoadedTracks().stream().anyMatch(track -> track.getGroups().contains(group));
+    }
+
+    public boolean isTrackTracked(String track) {
         return tracks.contains(track);
     }
 
@@ -50,23 +54,35 @@ public class RoleManager {
         return true;
     }
 
-    public void setDiscordGroup(String userId, String group) {
-        if (discordApi.getRoles().stream().noneMatch(e -> e.getName().equals(group))) {
-            System.out.println("Invalid configuration. No group by the name of '" + group + "' exists on Discord.");
-        }
-
-        Role role = discordApi.getRoles().stream().filter(e -> e.getName().equals(group)).findFirst().get();
-
+    public void removeTrackedGroups(String userId) {
         try {
             User user = discordApi.getUserById(accountManager.getDiscordId(userId)).get();
             discordApi.getServerById(serverId).ifPresent(server -> {
                 List<Role> trackedRoles = filterTrackedRoles(server.getRoles(user));
                 trackedRoles.forEach(trackedRole -> server.removeRoleFromUser(user, trackedRole));
-                server.addRoleToUser(user, role);
             });
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
+    }
+
+    public void setTrackedDiscordGroup(String userId, String group) {
+        if (discordApi.getRoles().stream().noneMatch(e -> e.getName().equals(group))) {
+            System.out.println("Invalid configuration. No group by the name of '" + group + "' exists on Discord.");
+        }
+
+        discordApi.getServerById(serverId).ifPresent(server -> {
+            server.getRoles().stream().filter(role -> role.getName().equals(group)).findFirst().ifPresent( role -> {
+                if (role.getName().equals(group)) {
+                    removeTrackedGroups(userId);
+                    try {
+                        server.addRoleToUser(discordApi.getUserById(accountManager.getDiscordId(userId)).get(), role);
+                    } catch (InterruptedException | ExecutionException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        });
     }
 
     private List<Role> filterTrackedRoles(List<Role> usersRoles) {

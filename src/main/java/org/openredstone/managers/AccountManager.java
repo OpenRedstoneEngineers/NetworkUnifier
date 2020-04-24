@@ -56,7 +56,16 @@ public class AccountManager {
         return false;
     }
 
-    public String getIgnFromDiscordId(String discordId) {
+    public String getSavedIgnFromUserId(String userId) {
+        try {
+            return queryManager.getIgnFromUserId(userId);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public String getSavedIgnFromDiscordId(String discordId) {
         try {
             return queryManager.getIgnByDiscordId(discordId);
         } catch (SQLException e) {

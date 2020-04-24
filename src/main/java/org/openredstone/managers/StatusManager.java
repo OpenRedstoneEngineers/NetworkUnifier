@@ -53,7 +53,7 @@ public class StatusManager {
             if (serversOnline.containsKey(server.getName()) && serversOnline.get(server.getName())) {
                 Collection<ProxiedPlayer> players = server.getPlayers();
                 if (players.isEmpty()) {
-                    embedBuilder.addInlineField(server.getName() + " (**0**)", "☹");
+                    embedBuilder.addField(server.getName() + " (**0**)", "☹");
                 } else {
                     StringBuilder message = new StringBuilder();
                     message.append("`");
@@ -64,10 +64,10 @@ public class StatusManager {
                         message.append(player.getName());
                     }
                     message.append("`");
-                    embedBuilder.addInlineField(server.getName() + " (**" + players.size() + "**)", message.toString());
+                    embedBuilder.addField(server.getName() + " (**" + players.size() + "**)", message.toString());
                 }
             } else {
-                embedBuilder.addInlineField(server.getName() + " is **offline**",  "☠");
+                embedBuilder.addField(server.getName() + " is **offline**",  "☠");
             }
         }
         return embedBuilder;

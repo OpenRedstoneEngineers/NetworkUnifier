@@ -46,6 +46,14 @@ public class QueryManager {
         return resultSet.getString("m_uuid");
     }
 
+    public String getIgnFromUserId(String userId) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM `nu_users` WHERE `m_uuid`=?");
+        preparedStatement.setString(1, userId);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        resultSet.next();
+        return resultSet.getString("ign");
+    }
+
     public String getIgnByDiscordId(String discordId) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM `nu_users` WHERE `discord_id`=?");
         preparedStatement.setString(1, discordId);

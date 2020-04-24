@@ -35,7 +35,7 @@ public class AuthCommand extends DiscordCommand {
             accountManager.linkDiscordAccount(arg1, Long.toString(event.getMessageAuthor().getId()));
 
             event.getMessageAuthor().asUser().ifPresent(user -> {
-                String ign = accountManager.getIgnFromDiscordId(user.getIdAsString());
+                String ign = accountManager.getSavedIgnFromDiscordId(user.getIdAsString());
                 user.updateNickname(event.getServer().get(), ign);
             });
 
