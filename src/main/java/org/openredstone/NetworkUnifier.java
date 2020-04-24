@@ -121,7 +121,7 @@ public class NetworkUnifier extends Plugin implements Listener {
 
         if (config.getBoolean("discord_enabled")) {
             discordNetworkBot = new DiscordApiBuilder().setToken(config.getString("discord_network_bot_token")).login().join();
-            discordNetworkBot.updateStatus(UserStatus.fromString(config.getString("discord_network_bot_playing_message")));
+            discordNetworkBot.updateActivity(config.getString("discord_network_bot_playing_message"));
             gameChannel = discordNetworkBot.getServerTextChannelById(config.getString("discord_channel_id")).get();
             statusManager = new StatusManager(config, discordNetworkBot, plugin);
             discordCommandManager = new DiscordCommandManager(discordNetworkBot, accountManager, config.getString("discord_command_character").charAt(0));
@@ -138,7 +138,7 @@ public class NetworkUnifier extends Plugin implements Listener {
 
         if (config.getBoolean("irc_enabled") && config.getBoolean("discord_enabled")) {
             discordIrcBot = new DiscordApiBuilder().setToken(config.getString("discord_irc_bot_token")).login().join();
-            discordIrcBot.updateStatus(UserStatus.fromString(config.getString("discord_irc_bot_playing_message")));
+            discordIrcBot.updateActivity(config.getString("discord_irc_bot_playing_message"));
             ircDiscordBot = new IrcBot(new Configuration.Builder()
                     .setName(config.getString("irc_discord_bot_name"))
                     .addServer(config.getString("irc_host"))
