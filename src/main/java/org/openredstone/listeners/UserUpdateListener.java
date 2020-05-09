@@ -3,6 +3,7 @@ package org.openredstone.listeners;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.event.EventBus;
 import net.luckperms.api.event.user.UserDataRecalculateEvent;
+import net.luckperms.api.model.group.Group;
 import net.luckperms.api.model.user.UserManager;
 import org.openredstone.managers.AccountManager;
 import org.openredstone.managers.RoleManager;
@@ -36,7 +37,8 @@ public class UserUpdateListener {
         UserManager userManager = api.getUserManager();
         Optional.ofNullable(userManager.getUser(userId)).ifPresent(user -> {
             if (roleManager.isGroupTracked(user.getPrimaryGroup())) {
-                roleManager.setTrackedDiscordGroup(userId.toString(), user.getPrimaryGroup());
+                Group primaryGroup = api.getGroupManager().getGroup(user.getPrimaryGroup());
+                roleManager.setTrackedDiscordGroup(userId.toString(), primaryGroup.getDisplayName());
             } else {
                 roleManager.removeTrackedGroups(userId.toString());
             }

@@ -2,6 +2,7 @@ package org.openredstone.managers;
 
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.group.Group;
+import net.luckperms.api.model.group.GroupManager;
 import net.luckperms.api.track.Track;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.permission.Role;
@@ -38,6 +39,7 @@ public class RoleManager {
     }
 
     public boolean groupsExistInTrackOnDiscordAlsoThisMethodIsReallyLongButIAmKeepingItToAnnoyPeople() {
+        GroupManager groupManager = api.getGroupManager();
         Set<Track> luckTracks = api.getTrackManager().getLoadedTracks();
         Collection<Role> roles = discordApi.getRoles();
         for (String track : tracks) {
@@ -46,7 +48,8 @@ public class RoleManager {
             }
             List<String> groups = luckTracks.stream().filter(e -> e.getName().equals(track)).findFirst().get().getGroups();
             for (String group : groups) {
-                if (roles.stream().noneMatch(role -> role.getName().equals(group))) {
+                Group displayName = groupManager.getGroup(group);
+                if (roles.stream().noneMatch(role -> role.getName().equals(displayName.getDisplayName()))) {
                     return false;
                 }
             }
@@ -67,13 +70,13 @@ public class RoleManager {
     }
 
     public void setTrackedDiscordGroup(String userId, String group) {
-        if (discordApi.getRoles().stream().noneMatch(e -> e.getName().equals(group))) {
+        if (discordApi.getRoles().stream().noneMatch(e -> e.getName().equalsIgnoreCase(group))) {
             System.out.println("Invalid configuration. No group by the name of '" + group + "' exists on Discord.");
         }
 
         discordApi.getServerById(serverId).ifPresent(server -> {
-            server.getRoles().stream().filter(role -> role.getName().equals(group)).findFirst().ifPresent( role -> {
-                if (role.getName().equals(group)) {
+            server.getRoles().stream().filter(role -> role.getName().equalsIgnoreCase(group)).findFirst().ifPresent( role -> {
+                if (role.getName().equalsIgnoreCase(group)) {
                     removeTrackedGroups(userId);
                     try {
                         server.addRoleToUser(discordApi.getUserById(accountManager.getDiscordId(userId)).get(), role);
@@ -88,9 +91,9 @@ public class RoleManager {
     private List<Role> filterTrackedRoles(List<Role> usersRoles) {
         Set<Group> groups = api.getGroupManager().getLoadedGroups();
         return usersRoles.stream().filter(role ->
-                groups.stream().anyMatch(e ->
-                        e.getName().equals(role.getName())
-                )
+                groups.stream().anyMatch(e -> {
+                    return (e.getDisplayName() != null) && (e.getDisplayName().equals(role.getName()));
+                })
         ).collect(Collectors.toList());
     }
 }

@@ -1,5 +1,6 @@
 package org.openredstone.managers;
 
+import net.luckperms.api.LuckPerms;
 import org.javacord.api.DiscordApi;
 import org.openredstone.commands.discord.AuthCommand;
 import org.openredstone.commands.discord.DiscordCommand;
@@ -12,10 +13,10 @@ public class DiscordCommandManager {
     private char commandChar;
     private ArrayList<DiscordCommand> commands = new ArrayList<>();
 
-    public DiscordCommandManager(DiscordApi discordApi, AccountManager accountManager, char commandChar) {
+    public DiscordCommandManager(DiscordApi discordApi, AccountManager accountManager, RoleManager roleManager, LuckPerms api, char commandChar) {
         this.discordApi = discordApi;
         this.commandChar = commandChar;
-        commands.add(new AuthCommand(accountManager));
+        commands.add(new AuthCommand(accountManager, roleManager, api));
         registerCommandListeners();
     }
 

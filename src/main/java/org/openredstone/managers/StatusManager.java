@@ -80,6 +80,7 @@ public class StatusManager {
                 ((ServerTextChannel) this.channel).sendMessage(embedBuilder).exceptionally(ExceptionLogger.get());
             } else {
                 if (messages.getNewestMessage().isPresent()) {
+                    messages.getNewestMessage().get().edit("");
                     messages.getNewestMessage().get().edit(embedBuilder);
                 }
             }

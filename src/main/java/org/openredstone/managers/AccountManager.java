@@ -46,7 +46,7 @@ public class AccountManager {
         return null;
     }
 
-    private boolean updateAccountDiscordId(String userId, String discordId) {
+    public boolean updateAccountDiscordId(String userId, String discordId) {
         try {
             queryManager.updateDiscordId(userId, discordId);
             return true;
@@ -54,6 +54,15 @@ public class AccountManager {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public String getUserIdByDiscordId(String discordId) {
+        try {
+            return queryManager.getUserIdByDiscordId(discordId);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public String getSavedIgnFromUserId(String userId) {

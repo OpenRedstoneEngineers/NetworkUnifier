@@ -1,9 +1,13 @@
 package org.openredstone.commands.discord;
 
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.model.group.GroupManager;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.openredstone.managers.AccountManager;
+import org.openredstone.managers.RoleManager;
 
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -12,11 +16,15 @@ import java.util.concurrent.TimeUnit;
 public class AuthCommand extends DiscordCommand {
 
     private AccountManager accountManager;
+    private RoleManager roleManager;
+    private LuckPerms api;
     private ScheduledExecutorService scheduledExecutorService;
 
-    public AuthCommand(AccountManager accountManager) {
+    public AuthCommand(AccountManager accountManager, RoleManager roleManager, LuckPerms api) {
         super("auth", 1, true);
         this.accountManager = accountManager;
+        this.roleManager = roleManager;
+        this.api = api;
         this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     }
 
@@ -36,6 +44,10 @@ public class AuthCommand extends DiscordCommand {
 
             event.getMessageAuthor().asUser().ifPresent(user -> {
                 String ign = accountManager.getSavedIgnFromDiscordId(user.getIdAsString());
+                String userId = accountManager.getUserIdByDiscordId(user.getIdAsString());
+                String primaryGroup = api.getUserManager().getUser(UUID.fromString(userId)).getPrimaryGroup();
+                GroupManager groupManager = api.getGroupManager();
+                roleManager.setTrackedDiscordGroup(userId, groupManager.getGroup(primaryGroup).getDisplayName());
                 user.updateNickname(event.getServer().get(), ign);
             });
 

@@ -124,13 +124,15 @@ public class NetworkUnifier extends Plugin implements Listener {
             discordNetworkBot.updateActivity(config.getString("discord_network_bot_playing_message"));
             gameChannel = discordNetworkBot.getServerTextChannelById(config.getString("discord_channel_id")).get();
             statusManager = new StatusManager(config, discordNetworkBot, plugin);
-            discordCommandManager = new DiscordCommandManager(discordNetworkBot, accountManager, config.getString("discord_command_character").charAt(0));
             nicknameManager = new NicknameManager(discordNetworkBot, accountManager, config.getString("discord_server_id"));
             roleManager = new RoleManager(accountManager, discordNetworkBot, luckPerms, config.getString("discord_server_id"), config.getStringList("discord_tracked_tracks"));
             if (!roleManager.groupsExistInTrackOnDiscordAlsoThisMethodIsReallyLongButIAmKeepingItToAnnoyPeople()) {
                 logger.log(Level.SEVERE, "Cannot validate that the roles from the specified tracks exist on Discord or LuckPerms!");
                 return;
+            } else {
+                logger.log(Level.INFO, "Validated that all listened tracks have related groups on discord.");
             }
+            discordCommandManager = new DiscordCommandManager(discordNetworkBot, accountManager, roleManager, luckPerms, config.getString("discord_command_character").charAt(0));
             new UserUpdateListener(roleManager, accountManager, luckPerms);
             proxy.getPluginManager().registerListener(plugin, new OnJoinHandler(accountManager, nicknameManager));
             proxy.getPluginManager().registerCommand(plugin, new DiscordCommand(accountManager,"discord", "networkunifier.discord", "discord"));
