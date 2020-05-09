@@ -22,6 +22,11 @@ public class TokenManager {
 
     public String registerTokenToUser(String userId) {
         String token = generateToken(tokenLength);
+        if (authenticationTokens.containsValue(userId)) {
+            String key = authenticationTokens.keySet().stream().filter(e -> authenticationTokens.get(e).equals(userId)).findFirst().get();
+            authenticationTokens.remove(key);
+            tokenLifespans.remove(key);
+        }
         authenticationTokens.put(token, userId);
         tokenLifespans.put(token, System.currentTimeMillis() / 1000L);
         return token;

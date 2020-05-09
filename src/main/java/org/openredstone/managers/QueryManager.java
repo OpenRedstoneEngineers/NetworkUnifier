@@ -87,7 +87,7 @@ public class QueryManager {
     }
 
     public void createUnlinkedUser(String userId, String ign) throws SQLException {
-        PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO `nu_users` VALUES (?, NULL, ?)");
+        PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO `nu_users` VALUES (?, NULL, ?) ON DUPLICATE KEY UPDATE `discord_id` = NULL");
         preparedStatement.setString(1, userId);
         preparedStatement.setString(2, ign);
         preparedStatement.execute();
