@@ -14,7 +14,6 @@ import net.md_5.bungee.api.plugin.Listener;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.Channel;
-import org.javacord.api.entity.user.UserStatus;
 import org.openredstone.bots.IrcBot;
 import org.openredstone.commands.minecraft.DiscordCommand;
 import org.openredstone.commands.minecraft.NetworkUnifierCommand;

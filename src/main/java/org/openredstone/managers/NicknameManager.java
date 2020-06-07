@@ -33,7 +33,7 @@ public class NicknameManager {
     public void setNickname(String userId, String name) {
         discordApi.getServerById(serverId).ifPresent(server -> {
             try {
-                server.resetNickname(discordApi.getUserById(accountManager.getDiscordId(userId)).get(), name);
+                server.updateNickname(discordApi.getUserById(accountManager.getDiscordId(userId)).get(), name);
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }

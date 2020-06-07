@@ -43,10 +43,10 @@ public class RoleManager {
         Set<Track> luckTracks = api.getTrackManager().getLoadedTracks();
         Collection<Role> roles = discordApi.getRoles();
         for (String track : tracks) {
-            if (luckTracks.stream().noneMatch(e -> e.getName().equals(track))) {
+            if (luckTracks.stream().noneMatch(luckTrack -> luckTrack.getName().equals(track))) {
                 return false;
             }
-            List<String> groups = luckTracks.stream().filter(e -> e.getName().equals(track)).findFirst().get().getGroups();
+            List<String> groups = luckTracks.stream().filter(luckTrack -> luckTrack.getName().equals(track)).findFirst().get().getGroups();
             for (String group : groups) {
                 Group displayName = groupManager.getGroup(group);
                 if (roles.stream().noneMatch(role -> role.getName().equals(displayName.getDisplayName()))) {
@@ -91,9 +91,9 @@ public class RoleManager {
     private List<Role> filterTrackedRoles(List<Role> usersRoles) {
         Set<Group> groups = api.getGroupManager().getLoadedGroups();
         return usersRoles.stream().filter(role ->
-                groups.stream().anyMatch(e -> {
-                    return (e.getDisplayName() != null) && (e.getDisplayName().equals(role.getName()));
-                })
+                groups.stream().anyMatch(group ->
+                    (group.getDisplayName() != null) && group.getDisplayName().equals(role.getName())
+                )
         ).collect(Collectors.toList());
     }
 }
