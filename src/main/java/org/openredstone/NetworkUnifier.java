@@ -2,6 +2,8 @@ package org.openredstone;
 
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.model.group.Group;
+import net.luckperms.api.model.user.User;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
@@ -131,6 +133,27 @@ public class NetworkUnifier extends Plugin implements Listener {
             } else {
                 logger.log(Level.INFO, "Validated that all listened tracks have related groups on discord.");
             }
+            discordNetworkBot.addServerMemberJoinListener(event -> {
+                String id = event.getUser().getIdAsString();
+                if (!accountManager.userIsLinkedByDiscordId(id)) {
+                    return;
+                }
+                nicknameManager.setNickname(id, accountManager.getSavedIgnFromDiscordId(id));
+                String uuid = accountManager.getUserIdByDiscordId(id);
+                User user = luckPerms.getUserManager().getUser(uuid);
+                if (user == null) {
+                    return;
+                }
+                String primaryGroup = user.getPrimaryGroup();
+                if (!roleManager.isGroupTracked(primaryGroup)) {
+                    return;
+                }
+                Group luckPrimaryGroup = luckPerms.getGroupManager().getGroup(primaryGroup);
+                if (luckPrimaryGroup == null) {
+                    return;
+                }
+                roleManager.setTrackedDiscordGroup(id, luckPrimaryGroup.getDisplayName());
+            });
             discordCommandManager = new DiscordCommandManager(discordNetworkBot, accountManager, roleManager, luckPerms, config.getString("discord_command_character").charAt(0));
             new UserUpdateListener(roleManager, accountManager, luckPerms);
             proxy.getPluginManager().registerListener(plugin, new OnJoinHandler(accountManager, nicknameManager));
