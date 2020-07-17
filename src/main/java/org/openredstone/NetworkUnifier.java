@@ -138,8 +138,8 @@ public class NetworkUnifier extends Plugin implements Listener {
                 if (!accountManager.userIsLinkedByDiscordId(id)) {
                     return;
                 }
-                nicknameManager.setNickname(id, accountManager.getSavedIgnFromDiscordId(id));
                 String uuid = accountManager.getUserIdByDiscordId(id);
+                nicknameManager.setNickname(uuid, accountManager.getSavedIgnFromDiscordId(id));
                 User user = luckPerms.getUserManager().getUser(uuid);
                 if (user == null) {
                     return;
