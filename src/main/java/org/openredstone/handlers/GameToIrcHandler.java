@@ -28,7 +28,11 @@ public class GameToIrcHandler implements Listener {
 
             ProxiedPlayer pp = (ProxiedPlayer) e.getSender();
             if ((e.getMessage().length() > 0) && (!e.getMessage().startsWith("/"))) {
-                bot.sendMessage(config.getString("irc_channel"), "\u000307" + pp.getDisplayName() + "\u000f: " + e.getMessage().replaceAll("&([0-9]|[abcdefklmnor])", "").trim());
+                bot.sendMessage(
+                    config.getString("irc_channel"),
+                    "\u000307" + pp.getDisplayName() + "\u000f: " +
+                        e.getMessage().replaceAll("&([0-9]|[abcdefklmnor])", "")
+                            .replaceAll("#[0-9a-fA-F]{6}", "").trim());
             }
 
         });
