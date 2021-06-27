@@ -4,9 +4,9 @@ import org.javacord.api.event.message.MessageCreateEvent;
 
 public abstract class DiscordCommand {
 
-    private String command;
-    private int argCount;
-    private boolean delete;
+    private final String command;
+    private final int argCount;
+    private final boolean delete;
 
     public DiscordCommand(String command, int argCount, boolean delete) {
         this.command = command;

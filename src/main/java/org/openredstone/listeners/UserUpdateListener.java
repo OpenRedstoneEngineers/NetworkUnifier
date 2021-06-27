@@ -13,9 +13,9 @@ import java.util.UUID;
 
 public class UserUpdateListener {
 
-    private RoleManager roleManager;
-    private AccountManager accountManager;
-    private LuckPerms api;
+    private final RoleManager roleManager;
+    private final AccountManager accountManager;
+    private final LuckPerms api;
 
     public UserUpdateListener(RoleManager roleManager, AccountManager accountManager, LuckPerms api) {
         this.roleManager = roleManager;

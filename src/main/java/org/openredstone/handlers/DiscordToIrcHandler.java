@@ -29,7 +29,7 @@ public class DiscordToIrcHandler {
         this.logger = logger;
         this.bot = bot;
         ignoredDiscordIds = config.getStringList("discord_ignore_ids");
-        logger.info("Ignoring Discord IDs: " + ignoredDiscordIds.toString());
+        logger.info("Ignoring Discord IDs: " + ignoredDiscordIds);
         discordApi = new DiscordApiBuilder().setToken(config.getString("discord_irc_bot_token"));
 
     }

@@ -17,7 +17,7 @@ public class QueryManager {
             "  UNIQUE KEY `ign` (`ign`)" +
             ");";
 
-    private Connection connection;
+    private final Connection connection;
 
     public QueryManager(String host, int port, String databaseName, String user, String password) throws SQLException {
         this.connection = DriverManager.getConnection(

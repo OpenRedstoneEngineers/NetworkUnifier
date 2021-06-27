@@ -21,8 +21,8 @@ import java.util.concurrent.TimeUnit;
 
 public class StatusManager {
 
-    private Channel channel;
-    private Plugin plugin;
+    private final Channel channel;
+    private final Plugin plugin;
 
     private final HashMap<String, Boolean> serversOnline = new HashMap<>();
 

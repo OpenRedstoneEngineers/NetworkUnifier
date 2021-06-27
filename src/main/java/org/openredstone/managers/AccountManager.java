@@ -4,8 +4,8 @@ import java.sql.SQLException;
 
 public class AccountManager {
 
-    private QueryManager queryManager;
-    private TokenManager tokenManager;
+    private final QueryManager queryManager;
+    private final TokenManager tokenManager;
 
     public AccountManager(QueryManager queryManager, int tokenLength, int lifeSpan) {
         this.queryManager = queryManager;

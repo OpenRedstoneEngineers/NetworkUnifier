@@ -9,9 +9,9 @@ import java.util.ArrayList;
 
 public class DiscordCommandManager {
 
-    private DiscordApi discordApi;
-    private char commandChar;
-    private ArrayList<DiscordCommand> commands = new ArrayList<>();
+    private final DiscordApi discordApi;
+    private final char commandChar;
+    private final ArrayList<DiscordCommand> commands = new ArrayList<>();
 
     public DiscordCommandManager(DiscordApi discordApi, AccountManager accountManager, RoleManager roleManager, LuckPerms api, char commandChar) {
         this.discordApi = discordApi;

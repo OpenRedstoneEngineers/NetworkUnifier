@@ -8,9 +8,9 @@ import java.util.concurrent.ExecutionException;
 
 public class NicknameManager {
 
-    private DiscordApi discordApi;
-    private AccountManager accountManager;
-    private String serverId;
+    private final DiscordApi discordApi;
+    private final AccountManager accountManager;
+    private final String serverId;
 
     public NicknameManager(DiscordApi discordApi, AccountManager accountManager, String serverId) {
         this.discordApi = discordApi;

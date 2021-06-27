@@ -5,12 +5,12 @@ import java.util.HashMap;
 
 public class TokenManager {
 
-    private SecureRandom secureRandom;
-    private HashMap<String, String> authenticationTokens;
-    private HashMap<String, Long> tokenLifespans;
+    private final SecureRandom secureRandom;
+    private final HashMap<String, String> authenticationTokens;
+    private final HashMap<String, Long> tokenLifespans;
 
-    private int tokenLength;
-    private int lifeSpan;
+    private final int tokenLength;
+    private final int lifeSpan;
 
     public TokenManager(int tokenLength, int lifeSpan) {
         this.secureRandom = new SecureRandom();

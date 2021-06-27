@@ -14,9 +14,9 @@ import java.util.regex.Pattern;
 
 public class IrcToGameHandler extends ListenerAdapter {
 
-    private Configuration config;
-    private ProxyServer ps;
-    private Plugin p;
+    private final Configuration config;
+    private final ProxyServer ps;
+    private final Plugin p;
 
     public IrcToGameHandler(ProxyServer ps, Plugin p, Configuration config) {
         this.config = config;

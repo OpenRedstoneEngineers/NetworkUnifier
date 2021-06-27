@@ -13,7 +13,7 @@ import org.pircbotx.hooks.events.KickEvent;
 
 public class IrcToDiscordHandler extends ListenerAdapter {
 
-    private Configuration config;
+    private final Configuration config;
     Channel channel;
 
     public IrcToDiscordHandler(Configuration config, DiscordApi api) {

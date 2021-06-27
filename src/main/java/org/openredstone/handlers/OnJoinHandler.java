@@ -8,8 +8,8 @@ import org.openredstone.managers.NicknameManager;
 
 public class OnJoinHandler implements Listener {
 
-    private AccountManager accountManager;
-    private NicknameManager nicknameManager;
+    private final AccountManager accountManager;
+    private final NicknameManager nicknameManager;
 
     public OnJoinHandler(AccountManager accountManager, NicknameManager nicknameManager) {
         this.accountManager = accountManager;

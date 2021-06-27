@@ -15,10 +15,10 @@ import java.util.concurrent.TimeUnit;
 
 public class AuthCommand extends DiscordCommand {
 
-    private AccountManager accountManager;
-    private RoleManager roleManager;
-    private LuckPerms api;
-    private ScheduledExecutorService scheduledExecutorService;
+    private final AccountManager accountManager;
+    private final RoleManager roleManager;
+    private final LuckPerms api;
+    private final ScheduledExecutorService scheduledExecutorService;
 
     public AuthCommand(AccountManager accountManager, RoleManager roleManager, LuckPerms api) {
         super("auth", 1, true);

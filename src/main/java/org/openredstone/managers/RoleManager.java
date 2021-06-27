@@ -16,11 +16,11 @@ import java.util.stream.Collectors;
 
 public class RoleManager {
 
-    private AccountManager accountManager;
-    private DiscordApi discordApi;
-    private LuckPerms api;
-    private String serverId;
-    private List<String> tracks;
+    private final AccountManager accountManager;
+    private final DiscordApi discordApi;
+    private final LuckPerms api;
+    private final String serverId;
+    private final List<String> tracks;
 
     public RoleManager(AccountManager accountManager, DiscordApi discordApi, LuckPerms api, String serverId, List<String> tracks) {
         this.accountManager = accountManager;

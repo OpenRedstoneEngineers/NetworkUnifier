@@ -8,7 +8,7 @@ import org.openredstone.managers.AccountManager;
 
 public class DiscordCommand extends Command {
 
-    private AccountManager accountManager;
+    private final AccountManager accountManager;
 
     public DiscordCommand(AccountManager accountManager, String name, String permission, String... aliases) {
         super(name, permission, aliases);
