@@ -2,8 +2,7 @@ package org.openredstone;
 
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
-import net.luckperms.api.model.group.Group;
-import net.luckperms.api.model.user.User;
+import net.luckperms.api.event.user.UserDataRecalculateEvent;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
@@ -16,22 +15,21 @@ import net.md_5.bungee.api.plugin.Listener;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.Channel;
+import org.javacord.api.entity.message.Message;
 import org.openredstone.bots.IrcBot;
-import org.openredstone.commands.minecraft.DiscordCommand;
+import org.openredstone.linking.*;
 import org.openredstone.commands.minecraft.NetworkUnifierCommand;
 import org.openredstone.handlers.*;
-import org.openredstone.listeners.UserUpdateListener;
-import org.openredstone.managers.AccountManager;
-import org.openredstone.managers.DiscordCommandManager;
-import org.openredstone.managers.NicknameManager;
-import org.openredstone.managers.QueryManager;
-import org.openredstone.managers.RoleManager;
-import org.openredstone.managers.StatusManager;
+import org.openredstone.managers.*;
 import org.pircbotx.Configuration;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,30 +54,17 @@ public class NetworkUnifier extends Plugin implements Listener {
 
     static DiscordToIrcHandler discordToIrcHandler;
 
-    static LuckPerms luckPerms;
-
-    static AccountManager accountManager;
-    static DiscordCommandManager discordCommandManager;
-    static NicknameManager nicknameManager;
-    static QueryManager queryManager;
-    static RoleManager roleManager;
     static StatusManager statusManager;
 
     @Override
     public void onEnable() {
-
         logger = getLogger();
         plugin = this;
         dataFolder = plugin.getDataFolder();
         proxy = getProxy();
         version = getDescription().getVersion();
-
-        luckPerms = LuckPermsProvider.get();
-
         proxy.getPluginManager().registerCommand(this, new NetworkUnifierCommand("networkunifier", "networkunifier", "nu"));
-
         load();
-
     }
 
     @Override
@@ -88,22 +73,7 @@ public class NetworkUnifier extends Plugin implements Listener {
     }
 
     public static void load() {
-
         loadConfig();
-
-        try {
-            queryManager = new QueryManager(
-                    config.getString("database_host"),
-                    config.getInt("database_port"),
-                    config.getString("database_name"),
-                    config.getString("database_user"),
-                    config.getString("database_pass")
-            );
-            accountManager = new AccountManager(queryManager, config.getInt("discord_token_size"), config.getInt("discord_token_lifespan"));
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return;
-        }
 
         if (config.getBoolean("irc_enabled")) {
             ircNetworkBot = new IrcBot(new Configuration.Builder()
@@ -125,39 +95,72 @@ public class NetworkUnifier extends Plugin implements Listener {
             discordNetworkBot.updateActivity(config.getString("discord_network_bot_playing_message"));
             gameChannel = discordNetworkBot.getServerTextChannelById(config.getString("discord_channel_id")).get();
             statusManager = new StatusManager(config, discordNetworkBot, plugin);
-            nicknameManager = new NicknameManager(discordNetworkBot, accountManager, config.getString("discord_server_id"));
-            roleManager = new RoleManager(accountManager, discordNetworkBot, luckPerms, config.getString("discord_server_id"), config.getStringList("discord_tracked_tracks"));
-            if (!roleManager.groupsExistInTrackOnDiscordAlsoThisMethodIsReallyLongButIAmKeepingItToAnnoyPeople()) {
-                logger.log(Level.SEVERE, "Cannot validate that the roles from the specified tracks exist on Discord or LuckPerms!");
+
+            // below this are linking thinking
+            LuckPerms luckPerms = LuckPermsProvider.get();
+            DiscordOperations discordOperations = new DiscordOperations(discordNetworkBot, luckPerms, config.getString("discord_server_id"), config.getStringList("discord_tracked_tracks"));
+            Tokens tokens = new Tokens(config.getInt("discord_token_size"), config.getInt("discord_token_lifespan"));
+            UserDatabase userDatabase;
+            try {
+                userDatabase = new UserDatabase(
+                        config.getString("database_host"),
+                        config.getInt("database_port"),
+                        config.getString("database_name"),
+                        config.getString("database_user"),
+                        config.getString("database_pass")
+                );
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return;
+            }
+            Linking linking = new Linking(tokens, userDatabase, discordOperations, luckPerms);
+
+            String error = discordOperations.groupsExistInTrackOnDiscordAlsoThisMethodIsReallyLongButIAmKeepingItToAnnoyPeopleAndIJustMadeItALittleBitLongerSmileyFace();
+            if (error != null) {
+                logger.log(Level.SEVERE, "Cannot validate that the roles from the specified tracks exist on Discord or LuckPerms: " + error);
                 return;
             } else {
                 logger.log(Level.INFO, "Validated that all listened tracks have related groups on discord.");
             }
-            discordNetworkBot.addServerMemberJoinListener(event -> {
-                String id = event.getUser().getIdAsString();
-                if (!accountManager.userIsLinkedByDiscordId(id)) {
+
+            discordNetworkBot.addServerMemberJoinListener(event -> linking.memberJoin(event.getUser().getIdAsString()));
+
+            // authcommand
+            char commandChar = config.getString("discord_command_character").charAt(0);
+            ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+            discordNetworkBot.addMessageCreateListener(event -> {
+                String rawMessage = event.getMessageContent();
+                String[] splat = rawMessage.split(" ");
+                String command = splat[0];
+                if (!command.equals(commandChar + "auth")) {
+                    event.getChannel().sendMessage("Invalid command.");
                     return;
                 }
-                String uuid = accountManager.getUserIdByDiscordId(id);
-                nicknameManager.setNickname(uuid, accountManager.getSavedIgnFromDiscordId(id));
-                User user = luckPerms.getUserManager().getUser(uuid);
-                if (user == null) {
+                if (splat.length != 2) {
+                    event.getChannel().sendMessage("This command requires exactly one argument.");
                     return;
                 }
-                String primaryGroup = user.getPrimaryGroup();
-                if (!roleManager.isGroupTracked(primaryGroup)) {
-                    return;
+                String token = splat[1];
+                String discordId = Long.toString(event.getMessageAuthor().getId());
+                String response = linking.finishLinking(discordId, token);
+                try {
+                    Message message = event.getChannel().sendMessage(response).get();
+                    scheduledExecutorService.schedule(() -> message.delete(), 5, TimeUnit.SECONDS);
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
                 }
-                Group luckPrimaryGroup = luckPerms.getGroupManager().getGroup(primaryGroup);
-                if (luckPrimaryGroup == null) {
-                    return;
-                }
-                roleManager.setTrackedDiscordGroup(id, luckPrimaryGroup.getDisplayName());
+                scheduledExecutorService.schedule(() -> event.getMessage().delete(), 5, TimeUnit.SECONDS);
             });
-            discordCommandManager = new DiscordCommandManager(discordNetworkBot, accountManager, roleManager, luckPerms, config.getString("discord_command_character").charAt(0));
-            new UserUpdateListener(roleManager, accountManager, luckPerms);
-            proxy.getPluginManager().registerListener(plugin, new OnJoinHandler(accountManager, nicknameManager));
-            proxy.getPluginManager().registerCommand(plugin, new DiscordCommand(accountManager,"discord", "networkunifier.discord", "discord"));
+
+            // user smth thing
+            luckPerms.getEventBus().subscribe(
+                    UserDataRecalculateEvent.class,
+                    event -> linking.userUpdate(event.getUser().getUniqueId())
+            );
+
+            // rest
+            proxy.getPluginManager().registerListener(plugin, new OnJoinHandler(linking));
+            proxy.getPluginManager().registerCommand(plugin, new DiscordCommand(linking,"discord", "networkunifier.discord", "discord"));
         }
 
         if (config.getBoolean("irc_enabled") && config.getBoolean("discord_enabled")) {
@@ -178,9 +181,7 @@ public class NetworkUnifier extends Plugin implements Listener {
         }
 
         joinQuitEventListener = new JoinQuitEventHandler(config, logger, ircNetworkBot, gameChannel);
-
         proxy.getPluginManager().registerListener(plugin, joinQuitEventListener);
-
     }
 
     public static void unload() {
