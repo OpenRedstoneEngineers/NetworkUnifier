@@ -121,7 +121,11 @@ public class JoinQuitEventHandler implements Listener {
     }
 
     private void sendToIrc(String message) {
-        bot.sendMessage(ircChannel, "\u000307" + message);
+        try{
+            bot.sendMessage(ircChannel, "\u000307" + message);
+        } catch (IllegalArgumentException ignored) {
+
+        }
     }
 
     private void sendToDiscord(String message) {
