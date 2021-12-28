@@ -23,9 +23,7 @@ public class IrcBot {
         botThread = new Thread(() -> {
             try {
                 bot.startBot();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (IrcException e) {
+            } catch (IOException | IrcException e) {
                 e.printStackTrace();
             }
         });
