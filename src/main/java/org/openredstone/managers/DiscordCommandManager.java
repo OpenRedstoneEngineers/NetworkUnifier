@@ -2,6 +2,7 @@ package org.openredstone.managers;
 
 import net.luckperms.api.LuckPerms;
 import org.javacord.api.DiscordApi;
+import org.javacord.api.event.message.MessageCreateEvent;
 import org.openredstone.commands.discord.AuthCommand;
 import org.openredstone.commands.discord.DiscordCommand;
 
@@ -22,23 +23,25 @@ public class DiscordCommandManager {
 
     private void registerCommandListeners() {
         discordApi.addMessageCreateListener(event -> {
-            if (event.getMessageContent().charAt(0) != commandChar) {
+            String rawMessage = event.getMessageContent();
+            // require at least commandChar + 1 char command = 2 chars
+            if (rawMessage.length() < 2 || event.getMessageContent().charAt(0) != commandChar) {
                 return;
             }
-
-            String rawMessage = event.getMessageContent();
-
-            if (!rawMessage.contains(" ")) {
-                rawMessage += " ";
-            }
-
-            String arg0 = rawMessage.substring(1, rawMessage.indexOf(" "));
-            if (commands.stream().anyMatch(command -> command.getCommand().equals(arg0))) {
-                commands.stream().filter(command -> command.getCommand().equals(arg0)).findFirst().get().runCommand(event);
-            } else {
-                event.getChannel().sendMessage("Invalid command.");
-            }
-
+            String commandName = rawMessage.split(" ")[0].substring(1);
+            commands
+                    .stream()
+                    .filter(command -> command.getCommand().equals(commandName))
+                    .findFirst()
+                    .orElse(unknownCommand)
+                    .runCommand(event);
         });
     }
+
+    private final DiscordCommand unknownCommand = new DiscordCommand("unknown", 0, false) {
+        @Override
+        public void runCommand(MessageCreateEvent event) {
+            event.getChannel().sendMessage("Invalid command.");
+        }
+    };
 }

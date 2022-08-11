@@ -45,6 +45,16 @@
                 <configuration>
                     <shadedArtifactAttached>true</shadedArtifactAttached>
                     <shadedClassifierName>shaded</shadedClassifierName>
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>META-INF/*.SF</exclude>
+                                <exclude>META-INF/*.DSA</exclude>
+                                <exclude>META-INF/*.RSA</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
                 </configuration>
             </plugin>
         </plugins>
@@ -73,13 +83,13 @@
         <dependency>
             <groupId>org.javacord</groupId>
             <artifactId>javacord</artifactId>
-            <version>3.0.3</version>
+            <version>3.5.0</version>
             <type>pom</type>
         </dependency>
         <dependency>
             <groupId>net.luckperms</groupId>
             <artifactId>api</artifactId>
-            <version>5.1</version>
+            <version>5.4</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
